@@ -1,0 +1,20 @@
+features
+    Pizza
+        mandatory
+            Dough {Calories 10, Kind 'Wheat'}
+            Integer Cheese {Calories 5, Unit 'g'}
+            Sauce
+                alternative
+                    Tomato {Calories 2}
+                    Pesto {Calories 4}
+        optional
+            Mushrooms {Calories 1}
+            Ham {Calories 7}
+            Pineapple {Calories 2}
+            String "Greetings on box"
+
+constraints
+    Pineapple => Ham
+    sum(Calories) < 28
+    Cheese < 300
+    len("Greetings on box") < 100

@@ -206,4 +206,19 @@ public class UVLFeatureModelFormatTest {
 
         Assertions.assertFalse(notEquivalent);
     }
+    
+    @Test
+    void testUVLFeatureModelFormatParseWithIntegerFeatures() throws IOException {
+    	IFormat<IFeatureModel> format = new UVLFeatureModelFormat();
+        Result<IFeatureModel> result = format.parse(new FileInputMapper(
+                Path.of("src", "test", "resources", "uvl", "featureModelWithIntegerFeature.uvl"),
+                Charset.defaultCharset()));
+
+        if (result.isEmpty()) {
+            Assertions.fail();
+        }
+
+        IFeatureModel parsedFeatureModel = result.get();
+
+    }
 }

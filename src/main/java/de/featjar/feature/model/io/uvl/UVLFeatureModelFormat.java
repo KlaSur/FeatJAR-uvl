@@ -24,13 +24,20 @@ import de.featjar.base.data.Problem;
 import de.featjar.base.data.Result;
 import de.featjar.base.io.format.IFormat;
 import de.featjar.base.io.input.AInputMapper;
+import de.featjar.base.io.input.FileInputMapper;
 import de.featjar.base.tree.Trees;
 import de.featjar.feature.model.*;
 import de.featjar.feature.model.io.uvl.visitor.FeatureTreeToUVLFeatureModelVisitor;
 import de.featjar.feature.model.io.uvl.visitor.FormulaToUVLConstraintVisitor;
 import de.featjar.formula.structure.IFormula;
 import de.vill.main.UVLModelFactory;
+
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.util.*;
+
+import org.junit.jupiter.api.Assertions;
 
 /**
  * Parses and writes feature models from and to UVL files.
@@ -120,4 +127,19 @@ public class UVLFeatureModelFormat implements IFormat<IFeatureModel> {
     public String getName() {
         return "Universal Variability Language";
     }
+    
+    public static void main(String[] args) throws IOException {
+    	IFormat<IFeatureModel> format = new UVLFeatureModelFormat();
+        Result<IFeatureModel> result = format.parse(new FileInputMapper(
+                Path.of("src", "test", "resources", "uvl", "featureModelWithIntegerFeature.uvl"),
+                Charset.defaultCharset()));
+
+        if (result.isEmpty()) {
+            Assertions.fail();
+        }
+
+        IFeatureModel parsedFeatureModel = result.get();
+    }
 }
+
+
