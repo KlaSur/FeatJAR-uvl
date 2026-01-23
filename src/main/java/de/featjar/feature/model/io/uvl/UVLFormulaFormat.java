@@ -104,8 +104,8 @@ public class UVLFormulaFormat implements IFormat<IFormula> {
         de.vill.model.FeatureModel uvlModel = new de.vill.model.FeatureModel();
         de.vill.model.Feature uvlRootFeature = new Feature(ROOT_FEATURE_NAME);
         uvlRootFeature.setFeatureType(FeatureType.BOOL);
-        uvlRootFeature.getAttributes().put("name", new Attribute<>("name", ROOT_FEATURE_NAME));
-        uvlRootFeature.getAttributes().put("abstract", new Attribute<>("abstract", true));
+        uvlRootFeature.getAttributes().put("name", new Attribute<>("name", ROOT_FEATURE_NAME, uvlRootFeature));
+        uvlRootFeature.getAttributes().put("abstract", new Attribute<>("abstract", true, uvlRootFeature));
         uvlModel.setRootFeature(uvlRootFeature);
         uvlModel.getFeatureMap().put(ROOT_FEATURE_NAME, uvlRootFeature);
 
@@ -115,8 +115,8 @@ public class UVLFormulaFormat implements IFormat<IFormula> {
         formula.getVariableNames().forEach((variableName) -> {
             de.vill.model.Feature uvlFeature = new Feature(variableName);
             uvlFeature.setFeatureType(FeatureType.BOOL);
-            uvlFeature.getAttributes().put("name", new Attribute<>("name", variableName));
-            uvlFeature.getAttributes().put("abstract", new Attribute<>("abstract", false));
+            uvlFeature.getAttributes().put("name", new Attribute<>("name", variableName, uvlRootFeature));
+            uvlFeature.getAttributes().put("abstract", new Attribute<>("abstract", false, uvlRootFeature));
             uvlModel.getFeatureMap().put(variableName, uvlFeature);
             uvlRootGroup.getFeatures().add(uvlFeature);
         });

@@ -123,7 +123,17 @@ public class UVLFeatureModelToFeatureTree {
             } else if (feature.getParentGroup() != null
                     && feature.getParentGroup().GROUPTYPE == Group.GroupType.OPTIONAL) {
                 tree.mutate().makeOptional();
-            } else if (feature.getLowerBound() != null) {
+            // TODO: lower cannot be OPEN in a de.vill.model.Feature, but in an IFeatureTree?
+            } else if (feature.getCardinality() != null) {
+            	tree.mutate()
+                .setFeatureCardinality(Range.of(feature.getCardinality().lower, 
+                		feature.getCardinality().upper));
+            } else {
+                tree.mutate().setFeatureCardinality(Range.atMost(1));
+            }
+            	
+                
+            /* } else if (feature.getLowerBound() != null) {
                 if (feature.getUpperBound() != null) {
                     tree.mutate()
                             .setFeatureCardinality(Range.of(
@@ -138,7 +148,7 @@ public class UVLFeatureModelToFeatureTree {
                 } else {
                     tree.mutate().setFeatureCardinality(Range.atMost(1));
                 }
-            }
+            } */
 
             List<de.vill.model.Group> children = feature.getChildren();
             for (de.vill.model.Group group : children) {
@@ -156,7 +166,7 @@ public class UVLFeatureModelToFeatureTree {
                         break;
                     case GROUP_CARDINALITY:
                         groupRange = Range.of(
-                                Integer.parseInt(feature.getLowerBound()), Integer.parseInt(feature.getUpperBound()));
+                                feature.getCardinality().lower, feature.getCardinality().upper);
                         break;
                     default:
                         throw new ParseException(String.valueOf(group.GROUPTYPE));
@@ -185,8 +195,8 @@ public class UVLFeatureModelToFeatureTree {
             throws ParseException {
         IFeature feature = featureModel.mutate().addFeature(getName(uvlFeature));
         feature.mutate().setAbstract(getAttributeValue(uvlFeature, "abstract", Boolean.FALSE));
-        Map<String, Attribute> attributes = uvlFeature.getAttributes();
-        for (Entry<String, Attribute> entry : attributes.entrySet()) {
+        Map<String, Attribute<?>> attributes = uvlFeature.getAttributes();
+        for (Entry<String, Attribute<?>> entry : attributes.entrySet()) {
             String uvlAttributeName = entry.getValue().getName();
             Object uvlAttributeValue = Objects.requireNonNull(entry.getValue().getValue());
 

@@ -26,6 +26,7 @@ import de.featjar.formula.structure.IExpression;
 import de.featjar.formula.structure.connective.*;
 import de.featjar.formula.structure.predicate.Literal;
 import de.featjar.formula.structure.term.value.Variable;
+import de.vill.model.building.VariableReference;
 import de.vill.model.constraint.*;
 import java.util.HashMap;
 import java.util.List;
@@ -108,9 +109,10 @@ public class FormulaToUVLConstraintVisitor implements ITreeVisitor<IExpression, 
 
     private Constraint createLiteralConstraint(IExpression node) {
         Literal literal = (Literal) node;
+        
         if (!node.getChildren().isEmpty()) {
             if (literal.isPositive()) {
-                return new LiteralConstraint(literal.getChildren().get(0).getName());
+                return new LiteralConstraint(literal);
             } else {
                 return new NotConstraint(
                         new LiteralConstraint(literal.getChildren().get(0).getName()));

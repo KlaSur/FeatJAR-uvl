@@ -33,6 +33,7 @@ import de.featjar.feature.model.FeatureTree;
 import de.featjar.feature.model.IFeature;
 import de.featjar.feature.model.IFeatureTree;
 import de.vill.model.Attribute;
+import de.vill.model.Cardinality;
 import de.vill.model.FeatureModel;
 import de.vill.model.Group;
 import java.util.ArrayList;
@@ -107,7 +108,7 @@ public class FeatureTreeToUVLFeatureModelVisitor implements ITreeVisitor<IFeatur
                                         + escapeSeparator(attributeName.getName());
                         uvlFeature
                                 .getAttributes()
-                                .put(uvlAttributeName, new Attribute<>(uvlAttributeName, entry.getValue()));
+                                .put(uvlAttributeName, new Attribute<>(uvlAttributeName, entry.getValue(), uvlFeature));
                     });
 
             List<FeatureTree.Group> groups = node.getChildrenGroups();
@@ -141,8 +142,10 @@ public class FeatureTreeToUVLFeatureModelVisitor implements ITreeVisitor<IFeatur
                 } else {
                     de.vill.model.Group uvlGroup = new de.vill.model.Group(groupType);
                     uvlGroup.setParentFeature(uvlFeature);
-                    uvlGroup.setLowerBound(String.valueOf(group.getLowerBound()));
-                    uvlGroup.setUpperBound(String.valueOf(group.getUpperBound()));
+                    
+                    Cardinality cardinality = new Cardinality(group.getLowerBound(), group.getUpperBound());
+                    uvlGroup.setCardinality(cardinality);
+                    
                     uvlGroup.getFeatures().addAll(getUVLChildrenFeatures(children));
                     uvlFeature.addChildren(uvlGroup);
                 }
