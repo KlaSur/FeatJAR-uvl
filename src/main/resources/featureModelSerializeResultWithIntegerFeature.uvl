@@ -1,0 +1,15 @@
+features
+    Sandwich
+        mandatory
+            Bread 
+        optional
+            Sauce
+                or
+                    Ketchup 
+                    Mustard 
+            Integer Cheese
+                or
+                    Cheddar 
+                    Gouda
+                    Goat 
+            Pickle 

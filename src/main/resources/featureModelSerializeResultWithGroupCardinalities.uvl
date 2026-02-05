@@ -1,8 +1,11 @@
 features
         Boolean root {name 'root', abstract false}
-                mandatory
-                        Boolean Test7 {name 'Test7', abstract false}
                 optional
+                        Boolean Test7 {name 'Test7', abstract false}
+                            [0..2]
+                                Boolean Test8 {name 'Test8', abstract false}
+                                Boolean Test9 {name 'Test9', abstract false}
+                                Boolean Test10 {name 'Test10', abstract false}
                         Boolean Test1 {name 'Test1', abstract false}
                                 alternative
                                         Boolean Test3 {name 'Test3', abstract false}
@@ -11,8 +14,7 @@ features
                                 or
                                         Boolean Test5 {name 'Test5', abstract false}
                                         Boolean Test6 {name 'Test6', abstract false}
-
-constraints
-        (Test1 & Test2) | (Test3 <=> Test4) | (Test5 => Test6) | !Test7
+                 mandatory
+                 		Boolean Test11 {name 'Test11', abstract false}
 
 

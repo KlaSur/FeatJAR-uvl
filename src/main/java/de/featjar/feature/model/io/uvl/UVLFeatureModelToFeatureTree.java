@@ -166,7 +166,7 @@ public class UVLFeatureModelToFeatureTree {
                         break;
                     case GROUP_CARDINALITY:
                         groupRange = Range.of(
-                                feature.getCardinality().lower, feature.getCardinality().upper);
+                                group.getCardinality().lower, group.getCardinality().upper);
                         break;
                     default:
                         throw new ParseException(String.valueOf(group.GROUPTYPE));
