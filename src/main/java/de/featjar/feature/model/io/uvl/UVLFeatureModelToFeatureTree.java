@@ -118,12 +118,25 @@ public class UVLFeatureModelToFeatureTree {
             de.vill.model.Feature feature = featureStack.pop();
             IFeatureTree tree = featureTreeStack.pop();
 
-            if (feature.getParentGroup() != null && feature.getParentGroup().GROUPTYPE == Group.GroupType.MANDATORY) {
-                tree.mutate().makeMandatory();
+            if (feature.getParentGroup() != null && feature.getParentGroup().GROUPTYPE == Group.GroupType.MANDATORY) {                
+                if (feature.getCardinality() != null) {
+                	tree.mutate()
+                    .setFeatureCardinality(Range.of(feature.getCardinality().lower, 
+                    		feature.getCardinality().upper));
+                } else {
+                	tree.mutate().makeMandatory();
+                }
+            // TODO: feature under optional group with cardinality [2...3]?
             } else if (feature.getParentGroup() != null
                     && feature.getParentGroup().GROUPTYPE == Group.GroupType.OPTIONAL) {
-                tree.mutate().makeOptional();
-            // TODO: lower cannot be OPEN in a de.vill.model.Feature, but in an IFeatureTree?
+            	if (feature.getCardinality() != null) {
+                	tree.mutate()
+                    .setFeatureCardinality(Range.of(0, 
+                    		feature.getCardinality().upper));
+                } else {
+            	    tree.mutate().makeOptional();
+                }
+           
             } else if (feature.getCardinality() != null) {
             	tree.mutate()
                 .setFeatureCardinality(Range.of(feature.getCardinality().lower, 
