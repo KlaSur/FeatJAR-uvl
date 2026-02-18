@@ -31,6 +31,7 @@ import de.featjar.feature.model.IFeature;
 import de.featjar.feature.model.IFeatureModel;
 import de.featjar.feature.model.IFeatureTree;
 import de.featjar.formula.io.textual.ExpressionParser;
+import de.featjar.feature.model.io.uvl.UVLConstraintParser;
 import de.featjar.formula.io.textual.Symbols;
 import de.featjar.formula.io.textual.UVLSymbols;
 import de.featjar.formula.structure.Expressions;
@@ -85,12 +86,18 @@ public class UVLFeatureModelToFeatureTree {
             nodeReader.setSymbols(UVLSymbols.INSTANCE);
             nodeReader.setIgnoreMissingFeatures(ExpressionParser.ErrorHandling.KEEP);
             nodeReader.setIgnoreUnparseableSubExpressions(ExpressionParser.ErrorHandling.KEEP);
+            /*
             Result<IExpression> parse = nodeReader.parse(constraint.toString(false, ""));
             if (parse.isEmpty()) {
                 FeatJAR.log().problems(parse.getProblems());
             } else {
                 FeatJAR.log().debug(Expressions.print(parse.get()));
             }
+            formulas.add((IFormula) parse.get());
+            */
+            
+            final UVLConstraintParser uvlConstraintParser = new UVLConstraintParser();
+            Result<IExpression> parse = uvlConstraintParser.parse(constraint);
             formulas.add((IFormula) parse.get());
         }
 

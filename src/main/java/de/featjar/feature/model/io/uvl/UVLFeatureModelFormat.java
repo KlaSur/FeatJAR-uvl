@@ -20,6 +20,9 @@
  */
 package de.featjar.feature.model.io.uvl;
 
+import de.featjar.base.data.Attribute;
+import de.featjar.base.data.Attributes;
+import de.featjar.base.data.Name;
 import de.featjar.base.data.Problem;
 import de.featjar.base.data.Range;
 import de.featjar.base.data.Result;
@@ -39,6 +42,7 @@ import de.featjar.formula.structure.connective.BiImplies;
 import de.featjar.formula.structure.connective.Implies;
 import de.featjar.formula.structure.connective.Not;
 import de.featjar.formula.structure.connective.Or;
+import de.featjar.formula.structure.predicate.LessThan;
 import de.featjar.formula.structure.predicate.Literal;
 import de.vill.main.UVLModelFactory;
 
@@ -407,7 +411,7 @@ public class UVLFeatureModelFormat implements IFormat<IFeatureModel> {
         
         IFormat<IFeatureModel> format = new UVLFeatureModelFormat();
         Result<IFeatureModel> result = format.parse(new FileInputMapper(
-                Path.of("src", "main", "resources", "featureModelSerializeResultWithFeatureCardinalities.uvl"),
+                Path.of("src", "main", "resources", "featureModelWithOneLiteralConstraint.uvl"),
                 Charset.defaultCharset()));
 
         if (result.isEmpty()) {
@@ -520,7 +524,10 @@ public class UVLFeatureModelFormat implements IFormat<IFeatureModel> {
         childTree1.mutate().addFeatureBelow(childFeature4);
 
         IFeature childFeature5 = featureModel.mutate().addFeature("Test5");
-        childTree2.mutate().addFeatureBelow(childFeature5);
+        IFeatureTree childFeature5Tree = childTree2.mutate().addFeatureBelow(childFeature5);
+        
+        Attribute<Integer> testAttribute = Attributes.get(new Name("any", "test"), Integer.class);
+        childFeature5Tree.mutate().setAttributeValue(testAttribute, 5);
 
         IFeature childFeature6 = featureModel.mutate().addFeature("Test6");
         childTree2.mutate().addFeatureBelow(childFeature6);
@@ -528,7 +535,9 @@ public class UVLFeatureModelFormat implements IFormat<IFeatureModel> {
         IFeature childFeature7 = featureModel.mutate().addFeature("Test7");
         IFeatureTree childTree7 = rootTree.mutate().addFeatureBelow(childFeature7);
         childTree7.mutate().makeMandatory();
-
+        
+        Object attribute = childFeature5Tree.getAttributes().get().values().stream().findFirst().get();
+        
         IFormula formula1 = new Or(
                 new And(new Literal("Test1"), new Literal("Test2")),
                 new BiImplies(new Literal("Test3"), new Literal("Test4")),
@@ -546,7 +555,7 @@ public class UVLFeatureModelFormat implements IFormat<IFeatureModel> {
         }
 
         String expected = new String(
-                Files.readAllBytes(Path.of("src", "main", "resources", "featureModelSerializeResultWithLiteralConstraint.uvl")));
+                Files.readAllBytes(Path.of("src", "main", "resources", "featureModelWithOneLiteralConstraint.uvl")));
         Assertions.assertEquals(expected, featureModelString.get());
     }
     
@@ -565,9 +574,9 @@ public class UVLFeatureModelFormat implements IFormat<IFeatureModel> {
     
     public static void main(String[] args) throws IOException {
     	// testParseWithGroupCardinality();
-    	// testParseWithFeatureCardinality();
-    	// testParseWithLiteralConstraint();
-    	testParseWithIntegerConstraint();
+    	testParseWithFeatureCardinality();
+        // testParseWithLiteralConstraint();
+    	// testParseWithIntegerConstraint();
     }
 }
 
