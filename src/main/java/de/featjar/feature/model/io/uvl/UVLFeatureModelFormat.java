@@ -411,7 +411,7 @@ public class UVLFeatureModelFormat implements IFormat<IFeatureModel> {
         
         IFormat<IFeatureModel> format = new UVLFeatureModelFormat();
         Result<IFeatureModel> result = format.parse(new FileInputMapper(
-                Path.of("src", "main", "resources", "featureModelWithOneLiteralConstraint.uvl"),
+                Path.of("src", "main", "resources", "featureModelSerializeResultWithFeatureCardinalities.uvl"),
                 Charset.defaultCharset()));
 
         if (result.isEmpty()) {
@@ -555,7 +555,7 @@ public class UVLFeatureModelFormat implements IFormat<IFeatureModel> {
         }
 
         String expected = new String(
-                Files.readAllBytes(Path.of("src", "main", "resources", "featureModelWithOneLiteralConstraint.uvl")));
+                Files.readAllBytes(Path.of("src", "main", "resources", "featureModelSerializeResultWithLiteralConstraint.uvl")));
         Assertions.assertEquals(expected, featureModelString.get());
     }
     
@@ -572,11 +572,25 @@ public class UVLFeatureModelFormat implements IFormat<IFeatureModel> {
          IFeatureModel parsedFeatureModel = result.get();
     }
     
+    public static void testUVLConstraintParser() throws IOException {
+    	IFormat<IFeatureModel> format = new UVLFeatureModelFormat();
+        Result<IFeatureModel> result = format.parse(new FileInputMapper(
+                Path.of("src", "main", "resources", "UVLConstraintParser", "featureModelWithAddExpression.uvl"),
+                Charset.defaultCharset()));
+
+        if (result.isEmpty()) {
+            Assertions.fail();
+        }
+
+        IFeatureModel parsedFeatureModel = result.get();
+    }
+    
     public static void main(String[] args) throws IOException {
     	// testParseWithGroupCardinality();
-    	testParseWithFeatureCardinality();
+    	// testParseWithFeatureCardinality();
         // testParseWithLiteralConstraint();
     	// testParseWithIntegerConstraint();
+    	testUVLConstraintParser();
     }
 }
 

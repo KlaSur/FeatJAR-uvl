@@ -15,4 +15,4 @@ features
             Pickle 
             
 constraints
-    Bread | Ketchup | Mustard
+    Ketchup.Calories >= 100
