@@ -113,6 +113,7 @@ public class FormulaToUVLConstraintVisitor implements ITreeVisitor<IExpression, 
         
         Feature feature = new Feature(literal.getChildren().get(0).getName());
         
+        // TODO: is this change due to version 1.1 correct?
         if (!node.getChildren().isEmpty()) {
             if (literal.isPositive()) {
             	// return new LiteralConstraint(literal);

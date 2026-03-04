@@ -575,7 +575,7 @@ public class UVLFeatureModelFormat implements IFormat<IFeatureModel> {
     public static void testUVLConstraintParser() throws IOException {
     	IFormat<IFeatureModel> format = new UVLFeatureModelFormat();
         Result<IFeatureModel> result = format.parse(new FileInputMapper(
-                Path.of("src", "main", "resources", "UVLConstraintParser", "featureModelWithAddExpression.uvl"),
+                Path.of("src", "main", "resources", "UVLConstraintParser", "featureModelWithLengthAggregateExpression.uvl"),
                 Charset.defaultCharset()));
 
         if (result.isEmpty()) {

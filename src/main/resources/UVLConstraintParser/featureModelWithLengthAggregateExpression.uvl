@@ -1,7 +1,7 @@
 features
     Sandwich
         mandatory
-            String Bread {Calories 100, Sugar 20}
+            String Bread {Sorte 'Gerste'}
         optional
             Sauce
                 or
@@ -15,4 +15,4 @@ features
             Pickle 
             
 constraints
-    Bread & Ketchup & Mustard & Gouda & Goat & Cheddar
+    len(Bread) > 5

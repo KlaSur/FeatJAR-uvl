@@ -21,13 +21,7 @@
 
 package de.featjar.feature.model.io.uvl;
 
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.ArrayList;
-
 import de.featjar.base.data.Result;
-import de.featjar.feature.model.Feature;
-import de.featjar.feature.model.FeatureModel;
 import de.featjar.formula.structure.IExpression;
 import de.featjar.formula.structure.IFormula;
 import de.featjar.formula.structure.connective.And;
@@ -35,25 +29,35 @@ import de.featjar.formula.structure.connective.BiImplies;
 import de.featjar.formula.structure.connective.Implies;
 import de.featjar.formula.structure.connective.Not;
 import de.featjar.formula.structure.connective.Or;
+import de.featjar.formula.structure.predicate.Equals;
+import de.featjar.formula.structure.predicate.GreaterEqual;
+import de.featjar.formula.structure.predicate.GreaterThan;
+import de.featjar.formula.structure.predicate.LessEqual;
+import de.featjar.formula.structure.predicate.LessThan;
 import de.featjar.formula.structure.predicate.Literal;
-import de.vill.model.building.VariableReference;
+import de.featjar.formula.structure.predicate.NotEquals;
+import de.featjar.formula.structure.term.ITerm;
 import de.featjar.formula.structure.term.IfThenElse;
 import de.featjar.formula.structure.term.function.integer.IntegerAdd;
+import de.featjar.formula.structure.term.value.Constant;
+import de.vill.model.building.VariableReference;
 import de.vill.model.constraint.AndConstraint;
-import de.vill.model.constraint.OrConstraint;
+import de.vill.model.constraint.EqualEquationConstraint;
 import de.vill.model.constraint.EquivalenceConstraint;
+import de.vill.model.constraint.GreaterEqualsEquationConstraint;
+import de.vill.model.constraint.GreaterEquationConstraint;
 import de.vill.model.constraint.ImplicationConstraint;
 import de.vill.model.constraint.LiteralConstraint;
+import de.vill.model.constraint.LowerEqualsEquationConstraint;
+import de.vill.model.constraint.LowerEquationConstraint;
 import de.vill.model.constraint.NotConstraint;
-import de.vill.model.expression.LiteralExpression;
-import de.vill.model.constraint.EqualEquationConstraint;
-import de.featjar.formula.structure.term.value.Constant;
-import de.featjar.formula.structure.predicate.Equals;
-import de.featjar.formula.structure.term.ITerm;
-import de.vill.model.expression.Expression;
-import de.vill.model.expression.NumberExpression;
+import de.vill.model.constraint.NotEqualsEquationConstraint;
+import de.vill.model.constraint.OrConstraint;
+import de.vill.model.constraint.ParenthesisConstraint;
 import de.vill.model.expression.AddExpression;
-import de.featjar.formula.structure.term.function.real.RealAdd;
+import de.vill.model.expression.Expression;
+import de.vill.model.expression.LiteralExpression;
+import de.vill.model.expression.NumberExpression;
 
 public class UVLConstraintParser {
 	public Result<ITerm> parseExpressionConstraint(Expression expression) {
@@ -145,6 +149,13 @@ public class UVLConstraintParser {
 		    	
 		    	return Result.of(new IfThenElse(condition, term1, term2));
 		    }
+		} else if (uvlConstraint instanceof ParenthesisConstraint) {
+			ParenthesisConstraint parenthesisConstraint = (ParenthesisConstraint) uvlConstraint;
+			parseUVLConstraintRecursively(parenthesisConstraint.getContent());
+		} else if (uvlConstraint instanceof ImplicationConstraint) {
+			ImplicationConstraint implicationConstraint = (ImplicationConstraint) uvlConstraint;
+			return Result.of(new Implies((IFormula) parse(implicationConstraint.getLeft()).get(), 
+					(IFormula) parse(implicationConstraint.getRight()).get()));
 		} else if (uvlConstraint instanceof NotConstraint) {
 			NotConstraint notConstraint = (NotConstraint) uvlConstraint;
 			return Result.of(new Not((IFormula) parse(notConstraint.getContent()).get()));
@@ -156,19 +167,35 @@ public class UVLConstraintParser {
 			OrConstraint orConstraint = (OrConstraint) uvlConstraint;
 			return Result.of(new Or((IFormula) parse(orConstraint.getLeft()).get(), 
 					(IFormula) parse(orConstraint.getRight()).get()));	
-		} else if (uvlConstraint instanceof ImplicationConstraint) {
-			ImplicationConstraint implicationConstraint = (ImplicationConstraint) uvlConstraint;
-			return Result.of(new Implies((IFormula) parse(implicationConstraint.getLeft()).get(), 
-					(IFormula) parse(implicationConstraint.getRight()).get()));
-		} else if (uvlConstraint instanceof EquivalenceConstraint) {
-			EquivalenceConstraint equivalenceConstraint = (EquivalenceConstraint) uvlConstraint;
-			return Result.of(new BiImplies((IFormula) parse(equivalenceConstraint.getLeft()).get(), 
-					(IFormula) parse(equivalenceConstraint.getRight()).get()));
 		} else if (uvlConstraint instanceof EqualEquationConstraint) {
 			EqualEquationConstraint equalConstraint = (EqualEquationConstraint) uvlConstraint;
 			return Result.of(new Equals(parseExpressionConstraint(equalConstraint.getLeft()).get(), 
 					parseExpressionConstraint(equalConstraint.getRight()).get()));
-		}
+		} else if (uvlConstraint instanceof EquivalenceConstraint) {
+			EquivalenceConstraint equivalenceConstraint = (EquivalenceConstraint) uvlConstraint;
+			return Result.of(new BiImplies((IFormula) parse(equivalenceConstraint.getLeft()).get(), 
+					(IFormula) parse(equivalenceConstraint.getRight()).get()));
+		} else if (uvlConstraint instanceof LowerEqualsEquationConstraint) {
+			LowerEqualsEquationConstraint lowerEqualsConstraint = (LowerEqualsEquationConstraint) uvlConstraint;
+			return Result.of(new LessEqual(parseExpressionConstraint(lowerEqualsConstraint.getLeft()).get(), 
+					parseExpressionConstraint(lowerEqualsConstraint.getRight()).get()));
+		} else if (uvlConstraint instanceof GreaterEqualsEquationConstraint) {
+			GreaterEqualsEquationConstraint greaterEqualConstraint = (GreaterEqualsEquationConstraint) uvlConstraint;
+			return Result.of(new GreaterEqual(parseExpressionConstraint(greaterEqualConstraint.getLeft()).get(), 
+					parseExpressionConstraint(greaterEqualConstraint.getRight()).get()));
+		} else if (uvlConstraint instanceof NotEqualsEquationConstraint) {
+			NotEqualsEquationConstraint notEqualsConstraint = (NotEqualsEquationConstraint) uvlConstraint;
+			return Result.of(new NotEquals(parseExpressionConstraint(notEqualsConstraint.getLeft()).get(), 
+					parseExpressionConstraint(notEqualsConstraint.getRight()).get()));
+		} else if (uvlConstraint instanceof LowerEquationConstraint) {
+			LowerEquationConstraint lowerConstraint = (LowerEquationConstraint) uvlConstraint;
+			return Result.of(new LessThan(parseExpressionConstraint(lowerConstraint.getLeft()).get(), 
+					parseExpressionConstraint(lowerConstraint.getRight()).get()));
+		} else if (uvlConstraint instanceof GreaterEquationConstraint) {
+			GreaterEquationConstraint greaterConstraint = (GreaterEquationConstraint) uvlConstraint;
+			return Result.of(new GreaterThan(parseExpressionConstraint(greaterConstraint.getLeft()).get(), 
+					parseExpressionConstraint(greaterConstraint.getRight()).get()));
+		} 
 		
 		throw new RuntimeException();
 	}

@@ -1,7 +1,7 @@
 features
     Sandwich
         mandatory
-            String Bread {Calories 100, Sugar 20}
+            Bread {Calories 100, Sugar 20}
         optional
             Sauce
                 or
@@ -15,4 +15,4 @@ features
             Pickle 
             
 constraints
-    Bread & Ketchup & Mustard & Gouda & Goat & Cheddar
+    sum(Calories) < 160
