@@ -583,6 +583,11 @@ public class UVLFeatureModelFormat implements IFormat<IFeatureModel> {
         }
 
         IFeatureModel parsedFeatureModel = result.get();
+        
+        IFormula formula1 = new And(new Literal("Bread"), new Literal("Ketchup"));
+        IConstraint andConstraint = parsedFeatureModel.getConstraints().stream().findFirst().orElse(null); 
+        Assertions.assertEquals(formula1, andConstraint.getFormula());
+        
     }
     
     public static void main(String[] args) throws IOException {
