@@ -20,6 +20,17 @@
  */
 package de.featjar.feature.model.io;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
 import de.featjar.FormatTest;
 import de.featjar.analysis.sat4j.computation.ComputeSatisfiableSAT4J;
 import de.featjar.base.computation.Computations;
@@ -27,23 +38,25 @@ import de.featjar.base.data.Result;
 import de.featjar.base.data.identifier.Identifiers;
 import de.featjar.base.io.format.IFormat;
 import de.featjar.base.io.input.FileInputMapper;
-import de.featjar.feature.model.*;
+import de.featjar.feature.model.FeatureModel;
+import de.featjar.feature.model.IConstraint;
+import de.featjar.feature.model.IFeature;
+import de.featjar.feature.model.IFeatureModel;
+import de.featjar.feature.model.IFeatureTree;
 import de.featjar.feature.model.io.uvl.UVLFeatureModelFormat;
 import de.featjar.formula.assignment.conversion.ComputeBooleanClauseList;
 import de.featjar.formula.computation.ComputeCNFFormula;
 import de.featjar.formula.computation.ComputeNNFFormula;
 import de.featjar.formula.structure.IFormula;
-import de.featjar.formula.structure.connective.*;
+import de.featjar.formula.structure.connective.And;
+import de.featjar.formula.structure.connective.BiImplies;
+import de.featjar.formula.structure.connective.Implies;
+import de.featjar.formula.structure.connective.Not;
+import de.featjar.formula.structure.connective.Or;
+import de.featjar.formula.structure.predicate.GreaterEqual;
 import de.featjar.formula.structure.predicate.Literal;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.stream.Collectors;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import de.featjar.formula.structure.term.function.integer.IntegerAdd;
+import de.featjar.formula.structure.term.value.Constant;
 
 public class UVLFeatureModelFormatTest {
 
@@ -208,10 +221,10 @@ public class UVLFeatureModelFormatTest {
     }
     
     @Test
-    void testUVLFeatureModelFormatParseWithIntegerFeatures() throws IOException {
+    void testImplicationConstraintToImpliesFormula() throws IOException {
     	IFormat<IFeatureModel> format = new UVLFeatureModelFormat();
         Result<IFeatureModel> result = format.parse(new FileInputMapper(
-                Path.of("src", "test", "resources", "uvl", "featureModelWithIntegerFeature.uvl"),
+                Path.of("src", "main", "resources", "UVLConstraintParser", "featureModelWithImplicationConstraint.uvl"),
                 Charset.defaultCharset()));
 
         if (result.isEmpty()) {
@@ -219,6 +232,67 @@ public class UVLFeatureModelFormatTest {
         }
 
         IFeatureModel parsedFeatureModel = result.get();
+        
+        IFormula impliesFormula = new Implies(new Literal("Cheese"), new Literal("Pickle"));
+        IConstraint impliesConstraint = parsedFeatureModel.getConstraints().stream().findFirst().orElse(null); 
+        Assertions.assertEquals(impliesFormula, impliesConstraint.getFormula());
+    }
+    
+    @Test
+    void testNotConstraintToNotFormula() throws IOException {
+    	IFormat<IFeatureModel> format = new UVLFeatureModelFormat();
+        Result<IFeatureModel> result = format.parse(new FileInputMapper(
+                Path.of("src", "main", "resources", "UVLConstraintParser", "featureModelWithNotConstraint.uvl"),
+                Charset.defaultCharset()));
 
+        if (result.isEmpty()) {
+            Assertions.fail();
+        }
+
+        IFeatureModel parsedFeatureModel = result.get();
+        
+        IFormula notFormula = new Not(new Literal("Cheese"));
+        IConstraint notConstraint = parsedFeatureModel.getConstraints().stream().findFirst().orElse(null); 
+        Assertions.assertEquals(notFormula, notConstraint.getFormula());
+    }
+    
+    @Test
+    void testAndConstraintToAndFormula() throws IOException {
+    	IFormat<IFeatureModel> format = new UVLFeatureModelFormat();
+        Result<IFeatureModel> result = format.parse(new FileInputMapper(
+                Path.of("src", "main", "resources", "UVLConstraintParser", "featureModelWithAndConstraint.uvl"),
+                Charset.defaultCharset()));
+
+        if (result.isEmpty()) {
+            Assertions.fail();
+        }
+
+        IFeatureModel parsedFeatureModel = result.get();
+        
+        IFormula andFormula = new And(new Literal("Bread"), new Literal("Ketchup"));
+        IConstraint andConstraint = parsedFeatureModel.getConstraints().stream().findFirst().orElse(null); 
+        Assertions.assertEquals(andFormula, andConstraint.getFormula());
+    }
+    
+    @Test
+    void testSaladFeatureModel() throws IOException {
+    	IFormat<IFeatureModel> format = new UVLFeatureModelFormat();
+        Result<IFeatureModel> result = format.parse(new FileInputMapper(
+                Path.of("src", "main", "resources", "UVLConstraintParser", "SaladFeatureModel.uvl"),
+                Charset.defaultCharset()));
+
+        if (result.isEmpty()) {
+            Assertions.fail();
+        }
+
+        IFeatureModel parsedFeatureModel = result.get();
+        
+        IFormula crossTreeConstraints = new And(new Implies(new Literal("Fennel"), new And(new Literal("Beets"), new Not(new Literal("Cucumber")))),
+        		new BiImplies(new Literal("Beans"), new Literal("Shallots")),
+        		new Implies(new Literal("Arugula"), new Or(new Literal("Cranberries"), new Literal("Walnuts"))),
+        		new GreaterEqual(new IntegerAdd(new Constant(90.0), new Constant(80.0)), new Constant(80.0)));
+        
+        IConstraint constraints = parsedFeatureModel.getConstraints().stream().findFirst().orElse(null); 
+        Assertions.assertEquals(crossTreeConstraints, constraints.getFormula());
     }
 }

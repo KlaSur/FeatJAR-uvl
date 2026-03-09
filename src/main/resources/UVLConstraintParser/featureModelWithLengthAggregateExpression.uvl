@@ -15,4 +15,4 @@ features
             Pickle 
             
 constraints
-    len(Bread) > 5
+    len(Bread.Sorte) > 5

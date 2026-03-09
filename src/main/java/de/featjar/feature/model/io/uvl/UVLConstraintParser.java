@@ -68,6 +68,7 @@ public class UVLConstraintParser {
 	public Result<IExpression> parse(de.vill.model.constraint.Constraint uvlConstraint) {
 		try {
 		    Result<IExpression> featureModelConstraint = parseUVLConstraintRecursively(uvlConstraint); 
+		    // TODO: wrap in Reference
 		    return featureModelConstraint;
 		} catch (RuntimeException e) {
 		    return Result.empty();
@@ -78,6 +79,7 @@ public class UVLConstraintParser {
 		if (uvlConstraint instanceof LiteralConstraint) {
 			LiteralConstraint literalConstraint = (LiteralConstraint) uvlConstraint;
 			VariableReference variableReference = literalConstraint.getReference();
+			// TODO: variableReference instanceof Attribute?
 		    if (variableReference instanceof de.vill.model.Feature) {
 		    	de.vill.model.Feature uvlFeature = (de.vill.model.Feature) variableReference;
 		    	return Result.of(new Literal(uvlFeature.getFeatureName()));
@@ -138,6 +140,7 @@ public class UVLConstraintParser {
 			LiteralExpression literalExpression = (LiteralExpression) expression;
 			VariableReference content = literalExpression.getContent();
 			
+			// TODO: variableReference instanceof Feature?
 			if (content instanceof de.vill.model.Attribute) {
 				de.vill.model.Attribute uvlAttribute = (de.vill.model.Attribute) content;
 		    	return Result.of(new Constant(uvlAttribute.getValue()));

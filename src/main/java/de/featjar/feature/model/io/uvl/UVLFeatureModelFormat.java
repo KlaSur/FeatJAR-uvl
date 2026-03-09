@@ -572,10 +572,10 @@ public class UVLFeatureModelFormat implements IFormat<IFeatureModel> {
          IFeatureModel parsedFeatureModel = result.get();
     }
     
-    public static void testUVLConstraintParser() throws IOException {
+    public static void testUVLConstraintToAndFormula() throws IOException {
     	IFormat<IFeatureModel> format = new UVLFeatureModelFormat();
         Result<IFeatureModel> result = format.parse(new FileInputMapper(
-                Path.of("src", "main", "resources", "UVLConstraintParser", "featureModelWithAndConstraint.uvl"),
+                Path.of("src", "main", "resources", "UVLConstraintParser", "featureModelWithLengthAggregateExpression.uvl"),
                 Charset.defaultCharset()));
 
         if (result.isEmpty()) {
@@ -584,9 +584,9 @@ public class UVLFeatureModelFormat implements IFormat<IFeatureModel> {
 
         IFeatureModel parsedFeatureModel = result.get();
         
-        IFormula formula1 = new And(new Literal("Bread"), new Literal("Ketchup"));
-        IConstraint andConstraint = parsedFeatureModel.getConstraints().stream().findFirst().orElse(null); 
-        Assertions.assertEquals(formula1, andConstraint.getFormula());
+        IFormula impliesFormula = new Implies(new Literal("Cheese"), new Literal("Pickle"));
+        IConstraint impliesConstraint = parsedFeatureModel.getConstraints().stream().findFirst().orElse(null); 
+        Assertions.assertEquals(impliesFormula, impliesConstraint.getFormula());
         
     }
     
@@ -595,7 +595,7 @@ public class UVLFeatureModelFormat implements IFormat<IFeatureModel> {
     	// testParseWithFeatureCardinality();
         // testParseWithLiteralConstraint();
     	// testParseWithIntegerConstraint();
-    	testUVLConstraintParser();
+    	testUVLConstraintToAndFormula();
     }
 }
 
