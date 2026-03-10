@@ -1,7 +1,7 @@
 features
     Sandwich
         mandatory
-            String Bread {Sorte 100}
+            Bread {Calories 100, Sugar 20}
         optional
             Sauce
                 or
@@ -15,4 +15,4 @@ features
             Pickle 
             
 constraints
-    len(Bread.Geschmack) > 5
+    (Ketchup.Calories + Bread.Calories) - (Ketchup.Calories + Bread.Calories)  == 100

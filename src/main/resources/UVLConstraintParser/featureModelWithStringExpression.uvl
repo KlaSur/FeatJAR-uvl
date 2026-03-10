@@ -1,7 +1,7 @@
 features
     Sandwich
         mandatory
-            String Bread {Sorte 100}
+            String Bread {Sorte 'Gerste', Geschmack 'super'}
         optional
             Sauce
                 or
@@ -15,4 +15,4 @@ features
             Pickle 
             
 constraints
-    len(Bread.Geschmack) > 5
+    Bread.Sorte == 'Roggen'

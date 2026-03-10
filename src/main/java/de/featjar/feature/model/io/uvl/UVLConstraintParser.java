@@ -21,6 +21,8 @@
 
 package de.featjar.feature.model.io.uvl;
 
+import java.util.stream.Collectors;
+
 import de.featjar.base.data.Result;
 import de.featjar.formula.structure.IExpression;
 import de.featjar.formula.structure.IFormula;
@@ -29,7 +31,6 @@ import de.featjar.formula.structure.connective.BiImplies;
 import de.featjar.formula.structure.connective.Implies;
 import de.featjar.formula.structure.connective.Not;
 import de.featjar.formula.structure.connective.Or;
-import de.featjar.formula.structure.connective.Reference;
 import de.featjar.formula.structure.predicate.Equals;
 import de.featjar.formula.structure.predicate.GreaterEqual;
 import de.featjar.formula.structure.predicate.GreaterThan;
@@ -41,7 +42,9 @@ import de.featjar.formula.structure.term.ITerm;
 import de.featjar.formula.structure.term.function.integer.IntegerAdd;
 import de.featjar.formula.structure.term.function.integer.IntegerDivide;
 import de.featjar.formula.structure.term.function.integer.IntegerMultiply;
+import de.featjar.formula.structure.term.function.string.StringLength;
 import de.featjar.formula.structure.term.value.Constant;
+import de.featjar.formula.structure.term.value.Variable;
 import de.vill.model.building.VariableReference;
 import de.vill.model.constraint.AndConstraint;
 import de.vill.model.constraint.EqualEquationConstraint;
@@ -52,6 +55,7 @@ import de.vill.model.constraint.ImplicationConstraint;
 import de.vill.model.constraint.LiteralConstraint;
 import de.vill.model.constraint.LowerEqualsEquationConstraint;
 import de.vill.model.constraint.LowerEquationConstraint;
+import de.vill.model.constraint.MultiOrConstraint;
 import de.vill.model.constraint.NotConstraint;
 import de.vill.model.constraint.NotEqualsEquationConstraint;
 import de.vill.model.constraint.OrConstraint;
@@ -59,10 +63,13 @@ import de.vill.model.constraint.ParenthesisConstraint;
 import de.vill.model.expression.AddExpression;
 import de.vill.model.expression.DivExpression;
 import de.vill.model.expression.Expression;
+import de.vill.model.expression.LengthAggregateFunctionExpression;
 import de.vill.model.expression.LiteralExpression;
 import de.vill.model.expression.MulExpression;
 import de.vill.model.expression.NumberExpression;
 import de.vill.model.expression.ParenthesisExpression;
+import de.vill.model.expression.StringExpression;
+import de.vill.model.expression.SubExpression;
 
 public class UVLConstraintParser {
 	public Result<IExpression> parse(de.vill.model.constraint.Constraint uvlConstraint) {
@@ -102,6 +109,10 @@ public class UVLConstraintParser {
 			OrConstraint orConstraint = (OrConstraint) uvlConstraint;
 			return Result.of(new Or((IFormula) parse(orConstraint.getLeft()).get(), 
 					(IFormula) parse(orConstraint.getRight()).get()));	
+		} else if (uvlConstraint instanceof MultiOrConstraint) {
+			MultiOrConstraint multiOrConstraint = (MultiOrConstraint) uvlConstraint;
+			return Result.of(new Or((IFormula) multiOrConstraint.getConstraintSubParts().stream()
+					.map(this::parseUVLConstraintRecursively).collect(Collectors.toList())));	
 		} else if (uvlConstraint instanceof EqualEquationConstraint) {
 			EqualEquationConstraint equalConstraint = (EqualEquationConstraint) uvlConstraint;
 			return Result.of(new Equals(parseExpressionConstraint(equalConstraint.getLeft()).get(), 
@@ -151,10 +162,18 @@ public class UVLConstraintParser {
 		} else if (expression instanceof NumberExpression) {
 			NumberExpression numberExpression = (NumberExpression) expression;
 			return Result.of(new Constant(numberExpression.getNumber()));
-		} else if (expression instanceof AddExpression) {
+		} else if (expression instanceof StringExpression) {
+			StringExpression stringExpression = (StringExpression) expression;
+			return Result.of(new Constant(stringExpression.getString(), String.class));
+		}
+		else if (expression instanceof AddExpression) {
 			AddExpression addExpression = (AddExpression) expression;
 			return Result.of(new IntegerAdd(parseExpressionConstraint(addExpression.getLeft()).get(), 
 					parseExpressionConstraint(addExpression.getRight()).get()));
+		} else if (expression instanceof SubExpression) {
+			SubExpression subExpression = (SubExpression) expression;
+			return Result.of(new IntegerAdd(parseExpressionConstraint(subExpression.getLeft()).get(), 
+					new IntegerMultiply(new Constant(-1l), parseExpressionConstraint(subExpression.getRight()).get())));
 		} else if (expression instanceof MulExpression) {
 			MulExpression mulExpression = (MulExpression) expression;
 			return Result.of(new IntegerMultiply(parseExpressionConstraint(mulExpression.getLeft()).get(), 
@@ -163,7 +182,11 @@ public class UVLConstraintParser {
 			DivExpression divExpression = (DivExpression) expression;
 			return Result.of(new IntegerDivide(parseExpressionConstraint(divExpression.getLeft()).get(), 
 					parseExpressionConstraint(divExpression.getRight()).get()));
-		} 
+		} else if (expression instanceof LengthAggregateFunctionExpression) {
+			LengthAggregateFunctionExpression lenghtAggregateExpression = (LengthAggregateFunctionExpression) expression;
+			Variable variable = new Variable(lenghtAggregateExpression.getReference().getIdentifier(), String.class);
+			return Result.of(new StringLength(variable));
+		}
 		
 		throw new RuntimeException();
 	}
