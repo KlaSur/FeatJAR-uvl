@@ -1,0 +1,41 @@
+features
+    Salad
+        mandatory
+            Base
+                or
+                    Arugula {Freshness 90, FoodMiles 20}
+                    String Beans
+                    Romaine {Freshness 80, FoodMiles 15}
+                    Farro
+            Dressing
+                or
+                    Citrus
+                    Tahini
+                    Garlic
+            Veggies
+                or
+                    Tomatoes {Freshness 30, tomatoType 'Cherry', FoodMiles 90}
+                    Cucumber {Freshness 25, FoodMiles 80}
+                    Fennel {Freshness 100, FoodMiles 11}
+                    Beets
+         optional
+             Protein
+                 or
+                     Chickpeas
+                     Lentils
+             Extras
+                 or
+                     Walnuts
+                     Almonds
+                     Shallots
+                     Cranberries
+            
+constraints
+    (Beans <=> Shallots | !Tomatoes)
+    (Tomatoes.FoodMiles - Cucumber.FoodMiles <= 20)
+    (Fennel.Freshness / Cucumber.Freshness > 3)
+    Tomatoes.tomatoType != 'Roma'
+    len(Beans) == 6
+    
+     
+    

@@ -71,10 +71,10 @@ import de.vill.model.expression.ParenthesisExpression;
 import de.vill.model.expression.StringExpression;
 import de.vill.model.expression.SubExpression;
 
-public class UVLConstraintParser {
+public class UVLConstraintConverter {
 	public Result<IExpression> parse(de.vill.model.constraint.Constraint uvlConstraint) {
 		try {
-		    Result<IExpression> featureModelConstraint = parseUVLConstraintRecursively(uvlConstraint); 
+		    Result<IExpression> featureModelConstraint = Result.of(parseUVLConstraintRecursively(uvlConstraint)); 
 		    // TODO: wrap in Reference
 		    return featureModelConstraint;
 		} catch (RuntimeException e) {
@@ -82,71 +82,71 @@ public class UVLConstraintParser {
 		}
 	}
 	
-	public Result<IExpression> parseUVLConstraintRecursively(de.vill.model.constraint.Constraint uvlConstraint) throws RuntimeException {
+	private IExpression parseUVLConstraintRecursively(de.vill.model.constraint.Constraint uvlConstraint) throws RuntimeException {
 		if (uvlConstraint instanceof LiteralConstraint) {
 			LiteralConstraint literalConstraint = (LiteralConstraint) uvlConstraint;
 			VariableReference variableReference = literalConstraint.getReference();
 			// TODO: variableReference instanceof Attribute?
 		    if (variableReference instanceof de.vill.model.Feature) {
 		    	de.vill.model.Feature uvlFeature = (de.vill.model.Feature) variableReference;
-		    	return Result.of(new Literal(uvlFeature.getFeatureName()));
+		    	return new Literal(uvlFeature.getFeatureName());
 		    }
 		} else if (uvlConstraint instanceof ParenthesisConstraint) {
 			ParenthesisConstraint parenthesisConstraint = (ParenthesisConstraint) uvlConstraint;
-			return Result.of(parseUVLConstraintRecursively(parenthesisConstraint.getContent()).get());
+			return parseUVLConstraintRecursively(parenthesisConstraint.getContent());
 		} else if (uvlConstraint instanceof ImplicationConstraint) {
 			ImplicationConstraint implicationConstraint = (ImplicationConstraint) uvlConstraint;
-			return Result.of(new Implies((IFormula) parse(implicationConstraint.getLeft()).get(), 
-					(IFormula) parse(implicationConstraint.getRight()).get()));
+			return new Implies((IFormula) parseUVLConstraintRecursively(implicationConstraint.getLeft()), 
+					(IFormula) parseUVLConstraintRecursively(implicationConstraint.getRight()));
 		} else if (uvlConstraint instanceof NotConstraint) {
 			NotConstraint notConstraint = (NotConstraint) uvlConstraint;
-			return Result.of(new Not((IFormula) parse(notConstraint.getContent()).get()));
+			return new Not((IFormula) parseUVLConstraintRecursively(notConstraint.getContent()));
 		} else if (uvlConstraint instanceof AndConstraint) {
 			AndConstraint andConstraint = (AndConstraint) uvlConstraint;
-			return Result.of(new And((IFormula) parse(andConstraint.getLeft()).get(), 
-					(IFormula) parse(andConstraint.getRight()).get()));	
+			return new And((IFormula) parseUVLConstraintRecursively(andConstraint.getLeft()), 
+					(IFormula) parseUVLConstraintRecursively(andConstraint.getRight()));	
 		} else if (uvlConstraint instanceof OrConstraint) {
 			OrConstraint orConstraint = (OrConstraint) uvlConstraint;
-			return Result.of(new Or((IFormula) parse(orConstraint.getLeft()).get(), 
-					(IFormula) parse(orConstraint.getRight()).get()));	
+			return new Or((IFormula) parseUVLConstraintRecursively(orConstraint.getLeft()), 
+					(IFormula) parseUVLConstraintRecursively(orConstraint.getRight()));	
 		} else if (uvlConstraint instanceof MultiOrConstraint) {
 			MultiOrConstraint multiOrConstraint = (MultiOrConstraint) uvlConstraint;
-			return Result.of(new Or((IFormula) multiOrConstraint.getConstraintSubParts().stream()
-					.map(this::parseUVLConstraintRecursively).collect(Collectors.toList())));	
+			return new Or((IFormula) multiOrConstraint.getConstraintSubParts().stream()
+					.map(this::parseUVLConstraintRecursively).collect(Collectors.toList()));	
 		} else if (uvlConstraint instanceof EqualEquationConstraint) {
 			EqualEquationConstraint equalConstraint = (EqualEquationConstraint) uvlConstraint;
-			return Result.of(new Equals(parseExpressionConstraint(equalConstraint.getLeft()).get(), 
-					parseExpressionConstraint(equalConstraint.getRight()).get()));
+			return new Equals(parseExpressionConstraint(equalConstraint.getLeft()), 
+					parseExpressionConstraint(equalConstraint.getRight()));
 		} else if (uvlConstraint instanceof EquivalenceConstraint) {
 			EquivalenceConstraint equivalenceConstraint = (EquivalenceConstraint) uvlConstraint;
-			return Result.of(new BiImplies((IFormula) parse(equivalenceConstraint.getLeft()).get(), 
-					(IFormula) parse(equivalenceConstraint.getRight()).get()));
+			return new BiImplies((IFormula) parseUVLConstraintRecursively(equivalenceConstraint.getLeft()), 
+					(IFormula) parseUVLConstraintRecursively(equivalenceConstraint.getRight()));
 		} else if (uvlConstraint instanceof LowerEqualsEquationConstraint) {
 			LowerEqualsEquationConstraint lowerEqualsConstraint = (LowerEqualsEquationConstraint) uvlConstraint;
-			return Result.of(new LessEqual(parseExpressionConstraint(lowerEqualsConstraint.getLeft()).get(), 
-					parseExpressionConstraint(lowerEqualsConstraint.getRight()).get()));
+			return new LessEqual(parseExpressionConstraint(lowerEqualsConstraint.getLeft()), 
+					parseExpressionConstraint(lowerEqualsConstraint.getRight()));
 		} else if (uvlConstraint instanceof GreaterEqualsEquationConstraint) {
 			GreaterEqualsEquationConstraint greaterEqualConstraint = (GreaterEqualsEquationConstraint) uvlConstraint;
-			return Result.of(new GreaterEqual(parseExpressionConstraint(greaterEqualConstraint.getLeft()).get(), 
-					parseExpressionConstraint(greaterEqualConstraint.getRight()).get()));
+			return new GreaterEqual(parseExpressionConstraint(greaterEqualConstraint.getLeft()), 
+					parseExpressionConstraint(greaterEqualConstraint.getRight()));
 		} else if (uvlConstraint instanceof NotEqualsEquationConstraint) {
 			NotEqualsEquationConstraint notEqualsConstraint = (NotEqualsEquationConstraint) uvlConstraint;
-			return Result.of(new NotEquals(parseExpressionConstraint(notEqualsConstraint.getLeft()).get(), 
-					parseExpressionConstraint(notEqualsConstraint.getRight()).get()));
+			return new NotEquals(parseExpressionConstraint(notEqualsConstraint.getLeft()), 
+					parseExpressionConstraint(notEqualsConstraint.getRight()));
 		} else if (uvlConstraint instanceof LowerEquationConstraint) {
 			LowerEquationConstraint lowerConstraint = (LowerEquationConstraint) uvlConstraint;
-			return Result.of(new LessThan(parseExpressionConstraint(lowerConstraint.getLeft()).get(), 
-					parseExpressionConstraint(lowerConstraint.getRight()).get()));
+			return new LessThan(parseExpressionConstraint(lowerConstraint.getLeft()), 
+					parseExpressionConstraint(lowerConstraint.getRight()));
 		} else if (uvlConstraint instanceof GreaterEquationConstraint) {
 			GreaterEquationConstraint greaterConstraint = (GreaterEquationConstraint) uvlConstraint;
-			return Result.of(new GreaterThan(parseExpressionConstraint(greaterConstraint.getLeft()).get(), 
-					parseExpressionConstraint(greaterConstraint.getRight()).get()));
+			return new GreaterThan(parseExpressionConstraint(greaterConstraint.getLeft()), 
+					parseExpressionConstraint(greaterConstraint.getRight()));
 		} 
 		
 		throw new RuntimeException();
 	}
 	
-	public Result<ITerm> parseExpressionConstraint(Expression expression) throws RuntimeException {
+	private ITerm parseExpressionConstraint(Expression expression) throws RuntimeException {
 		if (expression instanceof LiteralExpression) {
 			LiteralExpression literalExpression = (LiteralExpression) expression;
 			VariableReference content = literalExpression.getContent();
@@ -154,38 +154,38 @@ public class UVLConstraintParser {
 			// TODO: variableReference instanceof Feature?
 			if (content instanceof de.vill.model.Attribute) {
 				de.vill.model.Attribute uvlAttribute = (de.vill.model.Attribute) content;
-		    	return Result.of(new Constant(uvlAttribute.getValue()));
+		    	return new Constant(uvlAttribute.getValue());
 			}
 		} else if (expression instanceof ParenthesisExpression) {
 			ParenthesisExpression parenthesisExpression = (ParenthesisExpression) expression;
-			return Result.of(parseExpressionConstraint(parenthesisExpression.getContent()).get());
+			return parseExpressionConstraint(parenthesisExpression.getContent());
 		} else if (expression instanceof NumberExpression) {
 			NumberExpression numberExpression = (NumberExpression) expression;
-			return Result.of(new Constant(numberExpression.getNumber()));
+			return new Constant(numberExpression.getNumber());
 		} else if (expression instanceof StringExpression) {
 			StringExpression stringExpression = (StringExpression) expression;
-			return Result.of(new Constant(stringExpression.getString(), String.class));
+			return new Constant(stringExpression.getString(), String.class);
 		}
 		else if (expression instanceof AddExpression) {
 			AddExpression addExpression = (AddExpression) expression;
-			return Result.of(new IntegerAdd(parseExpressionConstraint(addExpression.getLeft()).get(), 
-					parseExpressionConstraint(addExpression.getRight()).get()));
+			return new IntegerAdd(parseExpressionConstraint(addExpression.getLeft()), 
+					parseExpressionConstraint(addExpression.getRight()));
 		} else if (expression instanceof SubExpression) {
 			SubExpression subExpression = (SubExpression) expression;
-			return Result.of(new IntegerAdd(parseExpressionConstraint(subExpression.getLeft()).get(), 
-					new IntegerMultiply(new Constant(-1l), parseExpressionConstraint(subExpression.getRight()).get())));
+			return new IntegerAdd(parseExpressionConstraint(subExpression.getLeft()), 
+					new IntegerMultiply(new Constant(-1l), parseExpressionConstraint(subExpression.getRight())));
 		} else if (expression instanceof MulExpression) {
 			MulExpression mulExpression = (MulExpression) expression;
-			return Result.of(new IntegerMultiply(parseExpressionConstraint(mulExpression.getLeft()).get(), 
-					parseExpressionConstraint(mulExpression.getRight()).get()));
+			return new IntegerMultiply(parseExpressionConstraint(mulExpression.getLeft()), 
+					parseExpressionConstraint(mulExpression.getRight()));
 		} else if (expression instanceof DivExpression) {
 			DivExpression divExpression = (DivExpression) expression;
-			return Result.of(new IntegerDivide(parseExpressionConstraint(divExpression.getLeft()).get(), 
-					parseExpressionConstraint(divExpression.getRight()).get()));
+			return new IntegerDivide(parseExpressionConstraint(divExpression.getLeft()), 
+					parseExpressionConstraint(divExpression.getRight()));
 		} else if (expression instanceof LengthAggregateFunctionExpression) {
 			LengthAggregateFunctionExpression lenghtAggregateExpression = (LengthAggregateFunctionExpression) expression;
 			Variable variable = new Variable(lenghtAggregateExpression.getReference().getIdentifier(), String.class);
-			return Result.of(new StringLength(variable));
+			return new StringLength(variable);
 		}
 		
 		throw new RuntimeException();

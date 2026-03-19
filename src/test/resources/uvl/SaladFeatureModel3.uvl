@@ -1,0 +1,34 @@
+features
+    Salad
+        mandatory
+            Base
+                or
+                    Arugula {Freshness 90}
+                    Beans
+                    Romaine {Freshness 100}
+                    Farro
+            Dressing
+                or
+                    Citrus
+                    Tahini
+                    Garlic
+            Veggies
+                or
+                    Tomatoes {Freshness 110}
+                    Cucumber {Freshness 70}
+                    Fennel {Freshness 80}
+                    Beets
+         optional
+             Protein
+                 or
+                     Chickpeas
+                     Lentils
+             Extras
+                 or
+                     Walnuts
+                     Almonds
+                     Shallots
+                     Cranberries
+            
+constraints
+    (Fennel => Beets & !Cucumber) & (Beans <=> Shallots) & (Arugula => Cranberries | Walnuts) & (Arugula.Freshness + Fennel.Freshness >= 80)

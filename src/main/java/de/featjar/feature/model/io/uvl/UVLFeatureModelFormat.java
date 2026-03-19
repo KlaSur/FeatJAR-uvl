@@ -85,7 +85,7 @@ public class UVLFeatureModelFormat implements IFormat<IFeatureModel> {
             List<IFormula> formulas = UVLFeatureModelToFeatureTree.uvlConstraintToFormula(uvlModel.getConstraints());
             formulas.forEach((formula) -> featureModel.mutate().addConstraint(formula));
 
-            return Result.of(featureModel);
+             return Result.of(featureModel);
         } catch (Exception e) {
             return Result.empty(e);
         }

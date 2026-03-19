@@ -1,0 +1,37 @@
+features
+    Salad
+        mandatory
+            Base
+                or
+                    Arugula {Freshness 90, FoodMiles 20}
+                    Beans
+                    Romaine {Freshness 80, FoodMiles 15}
+                    Farro
+            Dressing
+                or
+                    Citrus
+                    Tahini
+                    Garlic
+            Veggies
+                or
+                    Tomatoes {Freshness 30, tomatoType 'Cherry', FoodMiles 90}
+                    Cucumber {Freshness 25, FoodMiles 80}
+                    Fennel {Freshness 100, FoodMiles 11}
+                    Beets
+         optional
+             Protein
+                 or
+                     Chickpeas
+                     Lentils
+             Extras
+                 or
+                     Walnuts
+                     Almonds
+                     Shallots
+                     Cranberries
+            
+constraints
+    (Fennel => Beets & !Cucumber) 
+    (Arugula.Freshness + Fennel.Freshness >= 80)
+    (Cucumber.FoodMiles * Tomatoes.FoodMiles < 1600)
+    (Fennel.Freshness == 110)

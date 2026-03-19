@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -53,10 +54,19 @@ import de.featjar.formula.structure.connective.BiImplies;
 import de.featjar.formula.structure.connective.Implies;
 import de.featjar.formula.structure.connective.Not;
 import de.featjar.formula.structure.connective.Or;
+import de.featjar.formula.structure.predicate.Equals;
 import de.featjar.formula.structure.predicate.GreaterEqual;
+import de.featjar.formula.structure.predicate.GreaterThan;
+import de.featjar.formula.structure.predicate.LessEqual;
+import de.featjar.formula.structure.predicate.LessThan;
 import de.featjar.formula.structure.predicate.Literal;
+import de.featjar.formula.structure.predicate.NotEquals;
 import de.featjar.formula.structure.term.function.integer.IntegerAdd;
+import de.featjar.formula.structure.term.function.integer.IntegerDivide;
+import de.featjar.formula.structure.term.function.integer.IntegerMultiply;
+import de.featjar.formula.structure.term.function.string.StringLength;
 import de.featjar.formula.structure.term.value.Constant;
+import de.featjar.formula.structure.term.value.Variable;
 
 public class UVLFeatureModelFormatTest {
 
@@ -275,10 +285,10 @@ public class UVLFeatureModelFormatTest {
     }
     
     @Test
-    void testSaladFeatureModel() throws IOException {
+    void testSaladFeatureModel1() throws IOException {
     	IFormat<IFeatureModel> format = new UVLFeatureModelFormat();
         Result<IFeatureModel> result = format.parse(new FileInputMapper(
-                Path.of("src", "main", "resources", "UVLConstraintParser", "SaladFeatureModel.uvl"),
+                Path.of("src", "test", "resources", "uvl", "SaladFeatureModel.uvl"),
                 Charset.defaultCharset()));
 
         if (result.isEmpty()) {
@@ -286,13 +296,44 @@ public class UVLFeatureModelFormatTest {
         }
 
         IFeatureModel parsedFeatureModel = result.get();
+        List<IConstraint> constraints = new ArrayList<>(parsedFeatureModel.getConstraints());
         
-        IFormula crossTreeConstraints = new And(new Implies(new Literal("Fennel"), new And(new Literal("Beets"), new Not(new Literal("Cucumber")))),
-        		new BiImplies(new Literal("Beans"), new Literal("Shallots")),
-        		new Implies(new Literal("Arugula"), new Or(new Literal("Cranberries"), new Literal("Walnuts"))),
-        		new GreaterEqual(new IntegerAdd(new Constant(90.0), new Constant(80.0)), new Constant(80.0)));
+        IFormula impliesConstraint = new Implies(new Literal("Fennel"), new And(new Literal("Beets"), new Not(new Literal("Cucumber"))));
+        IFormula greaterEqualConstraint = new GreaterEqual(new IntegerAdd(new Constant(90l), new Constant(100l)), new Constant(80d));
+        IFormula lowerConstraint = new LessThan(new IntegerMultiply(new Constant(80l), new Constant(90l)), new Constant(1600d));
+        IFormula equalConstraint = new Equals(new Constant(100l), new Constant(110d));
         
-        IConstraint constraints = parsedFeatureModel.getConstraints().stream().findFirst().orElse(null); 
-        Assertions.assertEquals(crossTreeConstraints, constraints.getFormula());
+        Assertions.assertEquals(constraints.get(0).getFormula(), impliesConstraint);
+        Assertions.assertEquals(constraints.get(1).getFormula(), greaterEqualConstraint);
+        Assertions.assertEquals(constraints.get(2).getFormula(), lowerConstraint);
+        Assertions.assertEquals(constraints.get(3).getFormula(), equalConstraint);
+    }
+    
+    @Test
+    void testSaladFeatureModel2() throws IOException {
+    	IFormat<IFeatureModel> format = new UVLFeatureModelFormat();
+        Result<IFeatureModel> result = format.parse(new FileInputMapper(
+                Path.of("src", "test", "resources", "uvl", "SaladFeatureModel2.uvl"),
+                Charset.defaultCharset()));
+
+        if (result.isEmpty()) {
+            Assertions.fail();
+        }
+
+        IFeatureModel parsedFeatureModel = result.get();
+        List<IConstraint> constraints = new ArrayList<>(parsedFeatureModel.getConstraints());
+        
+        IFormula biImpliesConstraint = new BiImplies(new Literal("Beans"), new Or(new Literal("Shallots"), new Not(new Literal("Tomatoes"))));
+        IFormula lessEqualConstraint = new LessEqual(new IntegerAdd(new Constant(90l), new IntegerMultiply(new Constant(-1l), new Constant(80l))),
+        		new Constant(20d));
+        IFormula greaterThanConstraint = new GreaterThan(new IntegerDivide(new Constant(100l), new Constant(25l)), new Constant(3d));
+        IFormula notEqualsConstraint = new NotEquals(new Constant("Cherry", String.class), new Constant("Roma", String.class));
+        IFormula stringLengthConstraint = new Equals(new StringLength(new Variable("Beans", String.class)), new Constant(6d));
+        
+        Assertions.assertEquals(constraints.get(0).getFormula(), biImpliesConstraint);
+        Assertions.assertEquals(constraints.get(1).getFormula(), lessEqualConstraint);
+        Assertions.assertEquals(constraints.get(2).getFormula(), greaterThanConstraint);
+        Assertions.assertEquals(constraints.get(3).getFormula(), notEqualsConstraint);
+        Assertions.assertEquals(constraints.get(4).getFormula(), stringLengthConstraint);
     }
 }
