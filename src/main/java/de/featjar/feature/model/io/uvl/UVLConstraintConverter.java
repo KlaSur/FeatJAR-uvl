@@ -21,6 +21,8 @@
 
 package de.featjar.feature.model.io.uvl;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import de.featjar.base.data.Result;
@@ -72,17 +74,13 @@ import de.vill.model.expression.StringExpression;
 import de.vill.model.expression.SubExpression;
 
 public class UVLConstraintConverter {
-	public Result<IExpression> parse(de.vill.model.constraint.Constraint uvlConstraint) {
-		try {
-		    Result<IExpression> featureModelConstraint = Result.of(parseUVLConstraintRecursively(uvlConstraint)); 
-		    // TODO: wrap in Reference
-		    return featureModelConstraint;
-		} catch (RuntimeException e) {
-		    return Result.empty();
-		}
+	public Result<IExpression> parse(de.vill.model.constraint.Constraint uvlConstraint) throws UVLConstraintConversionException {
+		Result<IExpression> featureModelConstraint = Result.of(parseUVLConstraintRecursively(uvlConstraint)); 
+		// TODO: wrap in Reference
+		return featureModelConstraint;
 	}
 	
-	private IExpression parseUVLConstraintRecursively(de.vill.model.constraint.Constraint uvlConstraint) throws RuntimeException {
+	private IExpression parseUVLConstraintRecursively(de.vill.model.constraint.Constraint uvlConstraint) throws UVLConstraintConversionException {
 		if (uvlConstraint instanceof LiteralConstraint) {
 			LiteralConstraint literalConstraint = (LiteralConstraint) uvlConstraint;
 			VariableReference variableReference = literalConstraint.getReference();
@@ -111,8 +109,7 @@ public class UVLConstraintConverter {
 					(IFormula) parseUVLConstraintRecursively(orConstraint.getRight()));	
 		} else if (uvlConstraint instanceof MultiOrConstraint) {
 			MultiOrConstraint multiOrConstraint = (MultiOrConstraint) uvlConstraint;
-			return new Or((IFormula) multiOrConstraint.getConstraintSubParts().stream()
-					.map(this::parseUVLConstraintRecursively).collect(Collectors.toList()));	
+			return new Or(getMultiOrAsList(multiOrConstraint.getConstraintSubParts()));	
 		} else if (uvlConstraint instanceof EqualEquationConstraint) {
 			EqualEquationConstraint equalConstraint = (EqualEquationConstraint) uvlConstraint;
 			return new Equals(parseExpressionConstraint(equalConstraint.getLeft()), 
@@ -143,10 +140,10 @@ public class UVLConstraintConverter {
 					parseExpressionConstraint(greaterConstraint.getRight()));
 		} 
 		
-		throw new RuntimeException();
+		throw new UVLConstraintConversionException(uvlConstraint.getClass().getSimpleName() + " is not supported by the UVLConstraintConverter.");
 	}
 	
-	private ITerm parseExpressionConstraint(Expression expression) throws RuntimeException {
+	private ITerm parseExpressionConstraint(Expression expression) throws UVLConstraintConversionException {
 		if (expression instanceof LiteralExpression) {
 			LiteralExpression literalExpression = (LiteralExpression) expression;
 			VariableReference content = literalExpression.getContent();
@@ -188,6 +185,14 @@ public class UVLConstraintConverter {
 			return new StringLength(variable);
 		}
 		
-		throw new RuntimeException();
+		throw new UVLConstraintConversionException(expression.getClass().getSimpleName() + " is not supported by the UVLConstraintConverter.");
+	}
+	
+	private List<IFormula> getMultiOrAsList(List<de.vill.model.constraint.Constraint> constraints) throws UVLConstraintConversionException {
+		List<IFormula> results = new ArrayList<>();
+        for (de.vill.model.constraint.Constraint constraint : constraints) {
+        	results.add((IFormula) parseUVLConstraintRecursively(constraint));
+        }
+        return results;
 	}
 }
