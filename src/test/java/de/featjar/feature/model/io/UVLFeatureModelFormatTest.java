@@ -44,12 +44,10 @@ import de.featjar.feature.model.IConstraint;
 import de.featjar.feature.model.IFeature;
 import de.featjar.feature.model.IFeatureModel;
 import de.featjar.feature.model.IFeatureTree;
-import de.featjar.feature.model.io.uvl.UVLConstraintConverter;
 import de.featjar.feature.model.io.uvl.UVLFeatureModelFormat;
 import de.featjar.formula.assignment.conversion.ComputeBooleanClauseList;
 import de.featjar.formula.computation.ComputeCNFFormula;
 import de.featjar.formula.computation.ComputeNNFFormula;
-import de.featjar.formula.structure.IExpression;
 import de.featjar.formula.structure.IFormula;
 import de.featjar.formula.structure.connective.And;
 import de.featjar.formula.structure.connective.BiImplies;
@@ -69,7 +67,6 @@ import de.featjar.formula.structure.term.function.integer.IntegerMultiply;
 import de.featjar.formula.structure.term.function.string.StringLength;
 import de.featjar.formula.structure.term.value.Constant;
 import de.featjar.formula.structure.term.value.Variable;
-import de.vill.model.constraint.MultiOrConstraint;
 
 public class UVLFeatureModelFormatTest {
 
@@ -252,12 +249,12 @@ public class UVLFeatureModelFormatTest {
         IFormula lowerConstraint = new LessThan(new IntegerMultiply(new Constant(80l), new Constant(90l)), new Constant(1600d));
         IFormula equalConstraint = new Equals(new Constant(100l), new Constant(110d));
         
-        Assertions.assertEquals(constraints.get(0).getFormula(), impliesConstraint);
-        Assertions.assertEquals(constraints.get(1).getFormula(), greaterEqualConstraint);
-        Assertions.assertEquals(constraints.get(2).getFormula(), lowerConstraint);
-        Assertions.assertEquals(constraints.get(3).getFormula(), equalConstraint);
+        Assertions.assertEquals(constraints.get(0).getFormula().getChild(0).get(), impliesConstraint);
+        Assertions.assertEquals(constraints.get(1).getFormula().getChild(0).get(), greaterEqualConstraint);
+        Assertions.assertEquals(constraints.get(2).getFormula().getChild(0).get(), lowerConstraint);
+        Assertions.assertEquals(constraints.get(3).getFormula().getChild(0).get(), equalConstraint);
     }
-    
+        
     @Test
     void testSaladFeatureModel2() throws IOException {
     	IFormat<IFeatureModel> format = new UVLFeatureModelFormat();
@@ -279,10 +276,10 @@ public class UVLFeatureModelFormatTest {
         IFormula notEqualsConstraint = new NotEquals(new Constant("Cherry", String.class), new Constant("Roma", String.class));
         IFormula stringLengthConstraint = new Equals(new StringLength(new Variable("Beans", String.class)), new Constant(6d));
         
-        Assertions.assertEquals(constraints.get(0).getFormula(), biImpliesConstraint);
-        Assertions.assertEquals(constraints.get(1).getFormula(), lessEqualConstraint);
-        Assertions.assertEquals(constraints.get(2).getFormula(), greaterThanConstraint);
-        Assertions.assertEquals(constraints.get(3).getFormula(), notEqualsConstraint);
-        Assertions.assertEquals(constraints.get(4).getFormula(), stringLengthConstraint);
+        Assertions.assertEquals(constraints.get(0).getFormula().getChild(0).get(), biImpliesConstraint);
+        Assertions.assertEquals(constraints.get(1).getFormula().getChild(0).get(), lessEqualConstraint);
+        Assertions.assertEquals(constraints.get(2).getFormula().getChild(0).get(), greaterThanConstraint);
+        Assertions.assertEquals(constraints.get(3).getFormula().getChild(0).get(), notEqualsConstraint);
+        Assertions.assertEquals(constraints.get(4).getFormula().getChild(0).get(), stringLengthConstraint);
     }
 }

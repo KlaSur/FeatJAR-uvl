@@ -1,0 +1,16 @@
+features
+    Salad
+        mandatory
+            Arugula {Freshness 90, FoodMiles 20}
+            Veggies
+                or
+                    Tomatoes {Freshness 30, tomatoType 'Cherry', FoodMiles 100}
+                    Cucumber {Freshness 25, FoodMiles 80}
+                    Fennel {Freshness 100, FoodMiles 11}
+                    Beets {Freshness 150, FoodMiles 5}
+                    
+constraints
+    (Fennel => Beets & !Cucumber) 
+    (Arugula.Freshness + Fennel.Freshness >= 80)
+    (Cucumber.FoodMiles * Tomatoes.FoodMiles < 100000)
+    (Fennel.Freshness == 100)

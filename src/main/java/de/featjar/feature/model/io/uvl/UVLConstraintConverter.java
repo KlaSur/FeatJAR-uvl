@@ -23,7 +23,6 @@ package de.featjar.feature.model.io.uvl;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import de.featjar.base.data.Result;
 import de.featjar.formula.structure.IExpression;
@@ -33,6 +32,7 @@ import de.featjar.formula.structure.connective.BiImplies;
 import de.featjar.formula.structure.connective.Implies;
 import de.featjar.formula.structure.connective.Not;
 import de.featjar.formula.structure.connective.Or;
+import de.featjar.formula.structure.connective.Reference;
 import de.featjar.formula.structure.predicate.Equals;
 import de.featjar.formula.structure.predicate.GreaterEqual;
 import de.featjar.formula.structure.predicate.GreaterThan;
@@ -76,7 +76,6 @@ import de.vill.model.expression.SubExpression;
 public class UVLConstraintConverter {
 	public Result<IExpression> parse(de.vill.model.constraint.Constraint uvlConstraint) throws UVLConstraintConversionException {
 		Result<IExpression> featureModelConstraint = Result.of(parseUVLConstraintRecursively(uvlConstraint)); 
-		// TODO: wrap in Reference
 		return featureModelConstraint;
 	}
 	
@@ -136,6 +135,7 @@ public class UVLConstraintConverter {
 					parseExpressionConstraint(lowerConstraint.getRight()));
 		} else if (uvlConstraint instanceof GreaterEquationConstraint) {
 			GreaterEquationConstraint greaterConstraint = (GreaterEquationConstraint) uvlConstraint;
+			
 			return new GreaterThan(parseExpressionConstraint(greaterConstraint.getLeft()), 
 					parseExpressionConstraint(greaterConstraint.getRight()));
 		} 

@@ -22,22 +22,36 @@ package de.featjar.feature.model.io;
 
 import de.featjar.Common;
 import de.featjar.FormatTest;
+import de.featjar.analysis.javasmt.computation.ComputeJavaSMTFormula;
+import de.featjar.analysis.javasmt.computation.ComputeSolutionEnumeration;
 import de.featjar.base.FeatJAR;
+import de.featjar.base.computation.Computations;
 import de.featjar.base.data.Result;
 import de.featjar.base.io.format.IFormat;
 import de.featjar.base.io.input.FileInputMapper;
 import de.featjar.feature.model.io.uvl.UVLFormulaFormat;
 import de.featjar.formula.structure.IFormula;
 import de.featjar.formula.structure.connective.*;
+import de.featjar.formula.structure.predicate.Equals;
+import de.featjar.formula.structure.predicate.GreaterEqual;
+import de.featjar.formula.structure.predicate.LessThan;
 import de.featjar.formula.structure.predicate.Literal;
+import de.featjar.formula.structure.term.function.integer.IntegerAdd;
+import de.featjar.formula.structure.term.function.integer.IntegerMultiply;
+import de.featjar.formula.structure.term.value.Constant;
+
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.sosy_lab.java_smt.SolverContextFactory.Solvers;
+import org.sosy_lab.java_smt.api.BooleanFormula;
 
 public class UVLFormulaFormatTest extends Common {
 
@@ -98,5 +112,40 @@ public class UVLFormulaFormatTest extends Common {
                                 new Not(new Literal("Test7"))))));
 
         Assertions.assertEquals(expected, result.get());
+    }
+    
+    @Test
+    public void testUVLFormulaFormatParseAndEnumerateSolutions() throws IOException {
+    	IFormat<IFormula> format = new UVLFormulaFormat();
+        Result<IFormula> computedFormula = format.parse(new FileInputMapper(
+                Path.of("src", "test", "resources", "uvl", "MinimalSaladFeatureModel.uvl"), Charset.defaultCharset()));
+
+        if (computedFormula.isEmpty()) {
+            Assertions.fail();
+        }
+        
+        final Result<List<List<BooleanFormula>>> computedResult =
+                Computations.of((IFormula) computedFormula.get().getChild(0).get())
+                .map(ComputeJavaSMTFormula::new)
+                .set(ComputeJavaSMTFormula.SOLVER, Solvers.MATHSAT5)
+                .map(ComputeSolutionEnumeration::new).computeResult();
+        
+       IFormula expectedFormula = new And(new Literal("Salad"), new BiImplies(new Literal("Salad"), new Literal("Arugula")),
+        		new BiImplies(new Literal("Salad"), new Literal("Veggies")), new Or(new BiImplies(new Literal("Veggies"), new Literal("Tomatoes")),
+        		new BiImplies(new Literal("Veggies"), new Literal("Beets")), new BiImplies(new Literal("Veggies"), new Literal("Cucumber")),
+        		new BiImplies(new Literal("Veggies"), new Literal("Fennel"))), new Implies(new Literal("Fennel"), new And(new Literal("Beets"), 
+        		new Not(new Literal("Cucumber")))), new GreaterEqual(new IntegerAdd(new Constant(90l), new Constant(100l)), new Constant(80d)),
+        		new LessThan(new IntegerMultiply(new Constant(80l), new Constant(100l)), new Constant(100000d)),
+                new Equals(new Constant(100l), new Constant(100d)));
+    	
+    	final Result<List<List<BooleanFormula>>> expectedResult =
+                Computations.of(expectedFormula)
+                .map(ComputeJavaSMTFormula::new)
+                .set(ComputeJavaSMTFormula.SOLVER, Solvers.MATHSAT5)
+                .map(ComputeSolutionEnumeration::new).computeResult();
+    	
+    	int size = expectedResult.get().size();
+    	Assertions.assertEquals(expectedResult.get().size(), computedResult.get().size());
+   
     }
 }

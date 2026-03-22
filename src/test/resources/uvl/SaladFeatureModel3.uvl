@@ -31,4 +31,4 @@ features
                      Cranberries
             
 constraints
-    (Fennel => Beets & !Cucumber) & (Beans <=> Shallots) & (Arugula => Cranberries | Walnuts) & (Arugula.Freshness + Fennel.Freshness >= 80)
+    Fennel.Freshness => Cucumber.Freshness
