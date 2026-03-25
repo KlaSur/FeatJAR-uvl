@@ -127,7 +127,7 @@ public class UVLFormulaFormatTest extends Common {
         final Result<List<List<BooleanFormula>>> computedResult =
                 Computations.of((IFormula) computedFormula.get().getChild(0).get())
                 .map(ComputeJavaSMTFormula::new)
-                .set(ComputeJavaSMTFormula.SOLVER, Solvers.MATHSAT5)
+                .set(ComputeJavaSMTFormula.SOLVER, Solvers.Z3)
                 .map(ComputeSolutionEnumeration::new).computeResult();
         
        IFormula expectedFormula = new And(new Literal("Salad"), new BiImplies(new Literal("Salad"), new Literal("Arugula")),
@@ -141,7 +141,7 @@ public class UVLFormulaFormatTest extends Common {
     	final Result<List<List<BooleanFormula>>> expectedResult =
                 Computations.of(expectedFormula)
                 .map(ComputeJavaSMTFormula::new)
-                .set(ComputeJavaSMTFormula.SOLVER, Solvers.MATHSAT5)
+                .set(ComputeJavaSMTFormula.SOLVER, Solvers.Z3)
                 .map(ComputeSolutionEnumeration::new).computeResult();
     	
     	int size = expectedResult.get().size();
