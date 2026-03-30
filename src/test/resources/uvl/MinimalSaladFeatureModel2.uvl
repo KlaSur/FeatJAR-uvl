@@ -1,0 +1,9 @@
+features
+    Salad
+        mandatory
+            String Arugula {Freshness 90, FoodMiles 20}
+                    
+constraints
+    len(Arugula) == 7
+    
+    

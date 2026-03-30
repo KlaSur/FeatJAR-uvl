@@ -14,5 +14,6 @@ constraints
     (Arugula.Freshness + Fennel.Freshness >= 80)
     (Cucumber.FoodMiles * Tomatoes.FoodMiles < 100000)
     (Fennel.Freshness == 100)
-    Tomatoes.tomatoType == 'Roma'
-    len(Arugula) == 7
+    
+    
+    

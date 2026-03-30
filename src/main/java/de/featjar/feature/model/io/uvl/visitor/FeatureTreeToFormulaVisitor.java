@@ -34,6 +34,8 @@ import de.featjar.formula.structure.connective.Not;
 import de.featjar.formula.structure.connective.Or;
 import de.featjar.formula.structure.predicate.Literal;
 import de.featjar.formula.structure.predicate.True;
+import de.featjar.formula.structure.term.value.Variable;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -95,7 +97,11 @@ public class FeatureTreeToFormulaVisitor implements ITreeVisitor<IFeatureTree, I
 
         if (node.getChildren().isEmpty()) { // is leaf node
             if (node.isOptional() || node.isMandatory()) {
-                currentFormula = new Literal(featureName.get());
+            	if (feature.getType() == String.class) {
+            		currentFormula = new Literal(featureName.get() + "_def");
+            	} else {
+            		currentFormula = new Literal(featureName.get());
+            	}
             } else {
                 problems.add(new Problem(featureName.get() + " is neither an optional nor a mandatory feature."));
                 return TraversalAction.FAIL;
@@ -130,11 +136,23 @@ public class FeatureTreeToFormulaVisitor implements ITreeVisitor<IFeatureTree, I
                     currentFormula = childrenFormula;
                 }
             } else if (childrenFormula.getChildren().isEmpty()) {
-                currentFormula = new Literal(featureName.get());
+            	if (feature.getType() == String.class) {
+            		currentFormula = new Literal(featureName.get() + "_def");
+            	} else {
+            		currentFormula = new Literal(featureName.get());
+            	}
             } else if (node.isOptional()) {
-                currentFormula = new Implies(new Literal(featureName.get()), childrenFormula);
+            	if (feature.getType() == String.class) {
+            		currentFormula = new Implies(new Literal(featureName.get() + "_def"), childrenFormula);
+            	} else {
+            		currentFormula = new Implies(new Literal(featureName.get()), childrenFormula);
+            	}
             } else if (node.isMandatory()) {
-                currentFormula = new And(new Literal(featureName.get()), childrenFormula);
+            	if (feature.getType() == String.class) {
+            		currentFormula = new And(new Literal(featureName.get() + "_def"), childrenFormula);
+            	} else {
+            		currentFormula = new And(new Literal(featureName.get()), childrenFormula);
+            	}
             } else {
                 problems.add(new Problem(featureName.get() + " is neither an optional nor a mandatory feature."));
                 return TraversalAction.FAIL;

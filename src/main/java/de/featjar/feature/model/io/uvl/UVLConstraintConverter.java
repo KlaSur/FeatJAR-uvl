@@ -181,7 +181,7 @@ public class UVLConstraintConverter {
 					parseExpressionConstraint(divExpression.getRight()));
 		} else if (expression instanceof LengthAggregateFunctionExpression) {
 			LengthAggregateFunctionExpression lenghtAggregateExpression = (LengthAggregateFunctionExpression) expression;
-			Variable variable = new Variable(lenghtAggregateExpression.getReference().getIdentifier(), String.class);
+			Variable variable = new Variable(lenghtAggregateExpression.getReference().getIdentifier() + "_val", String.class);
 			return new StringLength(variable);
 		}
 		
