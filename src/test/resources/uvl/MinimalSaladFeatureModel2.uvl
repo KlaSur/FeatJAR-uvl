@@ -1,6 +1,6 @@
 features
     Salad
-        mandatory
+        optional
             String Arugula {Freshness 90, FoodMiles 20}
                     
 constraints

@@ -96,13 +96,10 @@ public class UVLFeatureModelToFeatureTree {
             formulas.add((IFormula) parse.get());
             */
             
-            try {
-            	final UVLConstraintConverter uvlConstraintParser = new UVLConstraintConverter();
-            	Result<IExpression> parse = uvlConstraintParser.parse(constraint);
-            	formulas.add((IFormula) parse.get());
-            } catch (Exception e) {
-            	String error = e.getMessage();
-            }
+            final UVLConstraintConverter uvlConstraintConverter = new UVLConstraintConverter();
+            Result<IExpression> parse = uvlConstraintConverter.parse(constraint);
+            formulas.add((IFormula) parse.get());
+            
         }
 
         return formulas;

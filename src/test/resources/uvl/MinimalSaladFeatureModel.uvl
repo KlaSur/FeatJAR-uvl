@@ -1,10 +1,11 @@
 features
     Salad
-        mandatory
+        optional
             String Arugula {Freshness 90, FoodMiles 20}
+        mandatory
             Veggies
                 or
-                    Tomatoes {Freshness 30, tomatoType 'Cherry', FoodMiles 100}
+                    Tomatoes {Freshness 30, FoodMiles 100, tomatoType 'Cherry'}
                     Cucumber {Freshness 25, FoodMiles 80}
                     Fennel {Freshness 100, FoodMiles 11}
                     Beets {Freshness 150, FoodMiles 5}
@@ -14,6 +15,11 @@ constraints
     (Arugula.Freshness + Fennel.Freshness >= 80)
     (Cucumber.FoodMiles * Tomatoes.FoodMiles < 100000)
     (Fennel.Freshness == 100)
+    (Beets <=> Cucumber | !Tomatoes)
+    (Tomatoes.FoodMiles - Cucumber.FoodMiles <= 30)
+    (Fennel.Freshness / Cucumber.Freshness > 3)
+    Tomatoes.tomatoType == 'Cherry'
+    len(Arugula) == 7
     
     
     

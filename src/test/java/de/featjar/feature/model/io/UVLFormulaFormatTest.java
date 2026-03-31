@@ -34,11 +34,16 @@ import de.featjar.formula.structure.IFormula;
 import de.featjar.formula.structure.connective.*;
 import de.featjar.formula.structure.predicate.Equals;
 import de.featjar.formula.structure.predicate.GreaterEqual;
+import de.featjar.formula.structure.predicate.GreaterThan;
+import de.featjar.formula.structure.predicate.LessEqual;
 import de.featjar.formula.structure.predicate.LessThan;
 import de.featjar.formula.structure.predicate.Literal;
 import de.featjar.formula.structure.term.function.integer.IntegerAdd;
+import de.featjar.formula.structure.term.function.integer.IntegerDivide;
 import de.featjar.formula.structure.term.function.integer.IntegerMultiply;
+import de.featjar.formula.structure.term.function.string.StringLength;
 import de.featjar.formula.structure.term.value.Constant;
+import de.featjar.formula.structure.term.value.Variable;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -130,13 +135,16 @@ public class UVLFormulaFormatTest extends Common {
                 .set(ComputeJavaSMTFormula.SOLVER, Solvers.Z3)
                 .map(ComputeSolutionEnumeration::new).computeResult();
         
-       IFormula expectedFormula = new And(new Literal("Salad"), new BiImplies(new Literal("Salad"), new Literal("Arugula")),
+       IFormula expectedFormula = new And(new Literal("Salad"), new BiImplies(new Literal("Salad"), new Literal("Arugula_def")),
         		new BiImplies(new Literal("Salad"), new Literal("Veggies")), new Or(new BiImplies(new Literal("Veggies"), new Literal("Tomatoes")),
         		new BiImplies(new Literal("Veggies"), new Literal("Beets")), new BiImplies(new Literal("Veggies"), new Literal("Cucumber")),
         		new BiImplies(new Literal("Veggies"), new Literal("Fennel"))), new Implies(new Literal("Fennel"), new And(new Literal("Beets"), 
         		new Not(new Literal("Cucumber")))), new GreaterEqual(new IntegerAdd(new Constant(90l), new Constant(100l)), new Constant(80d)),
         		new LessThan(new IntegerMultiply(new Constant(80l), new Constant(100l)), new Constant(100000d)),
-                new Equals(new Constant(100l), new Constant(100d)));
+                new Equals(new Constant(100l), new Constant(100d)), new BiImplies(new Literal("Beets"), new Or(new Literal("Cucumber"), new Not(new Literal("Tomatoes")))),
+                new LessEqual(new IntegerAdd(new Constant(100l), new IntegerMultiply(new Constant(-1l), new Constant(80l))), new Constant(30d)),
+                new GreaterThan(new IntegerDivide(new Constant(100l), new Constant(25l)), new Constant(3d)), new Equals(new Constant("Cherry"), new Constant("Cherry")),
+                new Implies(new And(new Literal("Arugula_def")), new Equals(new StringLength(new Variable("Arugula_val")), new Constant(7d))));
     	
     	final Result<List<List<BooleanFormula>>> expectedResult =
                 Computations.of(expectedFormula)

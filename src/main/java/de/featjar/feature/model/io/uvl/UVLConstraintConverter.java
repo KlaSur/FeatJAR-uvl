@@ -32,7 +32,6 @@ import de.featjar.formula.structure.connective.BiImplies;
 import de.featjar.formula.structure.connective.Implies;
 import de.featjar.formula.structure.connective.Not;
 import de.featjar.formula.structure.connective.Or;
-import de.featjar.formula.structure.connective.Reference;
 import de.featjar.formula.structure.predicate.Equals;
 import de.featjar.formula.structure.predicate.GreaterEqual;
 import de.featjar.formula.structure.predicate.GreaterThan;
@@ -47,6 +46,7 @@ import de.featjar.formula.structure.term.function.integer.IntegerMultiply;
 import de.featjar.formula.structure.term.function.string.StringLength;
 import de.featjar.formula.structure.term.value.Constant;
 import de.featjar.formula.structure.term.value.Variable;
+import de.vill.model.FeatureType;
 import de.vill.model.building.VariableReference;
 import de.vill.model.constraint.AndConstraint;
 import de.vill.model.constraint.EqualEquationConstraint;
@@ -74,16 +74,29 @@ import de.vill.model.expression.StringExpression;
 import de.vill.model.expression.SubExpression;
 
 public class UVLConstraintConverter {
-	public Result<IExpression> parse(de.vill.model.constraint.Constraint uvlConstraint) throws UVLConstraintConversionException {
-		Result<IExpression> featureModelConstraint = Result.of(parseUVLConstraintRecursively(uvlConstraint)); 
-		return featureModelConstraint;
+	private List<Literal> dependenciesList = new ArrayList<Literal>();
+	
+	public Result<IExpression> parse(de.vill.model.constraint.Constraint uvlConstraint) {
+		
+		try {
+			IFormula convertedUVLConstraint = (IFormula) parseUVLConstraintRecursively(uvlConstraint); 
+			
+			if (!dependenciesList.isEmpty()) {
+				And dependenciesAnd = new And(dependenciesList);
+				return Result.of(new Implies(dependenciesAnd, convertedUVLConstraint));
+			}
+			
+			return Result.of(convertedUVLConstraint);
+		} catch (UVLConstraintConversionException e) {
+			return Result.empty(e);
+		}
 	}
 	
 	private IExpression parseUVLConstraintRecursively(de.vill.model.constraint.Constraint uvlConstraint) throws UVLConstraintConversionException {
 		if (uvlConstraint instanceof LiteralConstraint) {
 			LiteralConstraint literalConstraint = (LiteralConstraint) uvlConstraint;
 			VariableReference variableReference = literalConstraint.getReference();
-			// TODO: variableReference instanceof Attribute?
+			
 		    if (variableReference instanceof de.vill.model.Feature) {
 		    	de.vill.model.Feature uvlFeature = (de.vill.model.Feature) variableReference;
 		    	return new Literal(uvlFeature.getFeatureName());
@@ -140,7 +153,8 @@ public class UVLConstraintConverter {
 					parseExpressionConstraint(greaterConstraint.getRight()));
 		} 
 		
-		throw new UVLConstraintConversionException(uvlConstraint.getClass().getSimpleName() + " is not supported by the UVLConstraintConverter.");
+		throw new UVLConstraintConversionException(uvlConstraint.getClass().getSimpleName() + " is not supported "
+				+ "by the UVLConstraintConverter.");
 	}
 	
 	private ITerm parseExpressionConstraint(Expression expression) throws UVLConstraintConversionException {
@@ -148,8 +162,11 @@ public class UVLConstraintConverter {
 			LiteralExpression literalExpression = (LiteralExpression) expression;
 			VariableReference content = literalExpression.getContent();
 			
-			// TODO: variableReference instanceof Feature?
-			if (content instanceof de.vill.model.Attribute) {
+			if (content instanceof de.vill.model.Feature) {
+				de.vill.model.Feature uvlFeature = (de.vill.model.Feature) content;
+				Class<?> featureType = getFeatureType(uvlFeature);
+				return new Variable(uvlFeature.getFeatureName(), featureType);
+			} else if (content instanceof de.vill.model.Attribute) {
 				de.vill.model.Attribute uvlAttribute = (de.vill.model.Attribute) content;
 		    	return new Constant(uvlAttribute.getValue());
 			}
@@ -181,11 +198,14 @@ public class UVLConstraintConverter {
 					parseExpressionConstraint(divExpression.getRight()));
 		} else if (expression instanceof LengthAggregateFunctionExpression) {
 			LengthAggregateFunctionExpression lenghtAggregateExpression = (LengthAggregateFunctionExpression) expression;
-			Variable variable = new Variable(lenghtAggregateExpression.getReference().getIdentifier() + "_val", String.class);
+			String variableName = lenghtAggregateExpression.getReference().getIdentifier();
+			Variable variable = new Variable(variableName + "_val", String.class);
+			dependenciesList.add(new Literal(variableName + "_def"));
 			return new StringLength(variable);
 		}
 		
-		throw new UVLConstraintConversionException(expression.getClass().getSimpleName() + " is not supported by the UVLConstraintConverter.");
+		throw new UVLConstraintConversionException(expression.getClass().getSimpleName() + " is not supported "
+				+ "by the UVLConstraintConverter.");
 	}
 	
 	private List<IFormula> getMultiOrAsList(List<de.vill.model.constraint.Constraint> constraints) throws UVLConstraintConversionException {
@@ -194,5 +214,18 @@ public class UVLConstraintConverter {
         	results.add((IFormula) parseUVLConstraintRecursively(constraint));
         }
         return results;
+	}
+	
+	private Class<?> getFeatureType(de.vill.model.Feature uvlFeature) throws UVLConstraintConversionException {
+		FeatureType type = uvlFeature.getFeatureType();
+	    switch (type) {
+	        case INT:
+	            return Long.class;
+	        case REAL:
+	            return Double.class;
+	        default:
+	        	throw new UVLConstraintConversionException("Feature type " + uvlFeature.getFeatureType() + " in ExpressionConstraints is not supported "
+	        			+ "by the UVLConstraintConverter.");
+	    }
 	}
 }
