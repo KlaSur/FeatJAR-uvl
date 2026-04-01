@@ -1,7 +1,5 @@
 features
     Salad
-        optional
-            String Arugula {Freshness 90, FoodMiles 20}
         mandatory
             Veggies
                 or
@@ -9,6 +7,8 @@ features
                     Cucumber {Freshness 25, FoodMiles 80}
                     Fennel {Freshness 100, FoodMiles 11}
                     Beets {Freshness 150, FoodMiles 5}
+        optional
+            String Arugula {Freshness 90, FoodMiles 20}
                     
 constraints
     (Fennel => Beets & !Cucumber) 

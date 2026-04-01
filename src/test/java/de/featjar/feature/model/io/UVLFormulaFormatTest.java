@@ -23,9 +23,11 @@ package de.featjar.feature.model.io;
 import de.featjar.Common;
 import de.featjar.FormatTest;
 import de.featjar.analysis.javasmt.computation.ComputeJavaSMTFormula;
+import de.featjar.analysis.javasmt.computation.ComputeSolutionCount;
 import de.featjar.analysis.javasmt.computation.ComputeSolutionEnumeration;
 import de.featjar.base.FeatJAR;
 import de.featjar.base.computation.Computations;
+import de.featjar.base.data.Problem;
 import de.featjar.base.data.Result;
 import de.featjar.base.io.format.IFormat;
 import de.featjar.base.io.input.FileInputMapper;
@@ -45,7 +47,10 @@ import de.featjar.formula.structure.term.function.string.StringLength;
 import de.featjar.formula.structure.term.value.Constant;
 import de.featjar.formula.structure.term.value.Variable;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -55,6 +60,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.objenesis.ObjenesisBase;
 import org.sosy_lab.java_smt.SolverContextFactory.Solvers;
 import org.sosy_lab.java_smt.api.BooleanFormula;
 
@@ -120,7 +126,7 @@ public class UVLFormulaFormatTest extends Common {
     }
     
     @Test
-    public void testUVLFormulaFormatParseAndEnumerateSolutions() throws IOException {
+    public void testUVLFormulaFormatParseWithMinimalSaladFeatureModel() throws IOException {
     	IFormat<IFormula> format = new UVLFormulaFormat();
         Result<IFormula> computedFormula = format.parse(new FileInputMapper(
                 Path.of("src", "test", "resources", "uvl", "MinimalSaladFeatureModel.uvl"), Charset.defaultCharset()));
@@ -129,31 +135,43 @@ public class UVLFormulaFormatTest extends Common {
             Assertions.fail();
         }
         
-        final Result<List<List<BooleanFormula>>> computedResult =
-                Computations.of((IFormula) computedFormula.get().getChild(0).get())
-                .map(ComputeJavaSMTFormula::new)
-                .set(ComputeJavaSMTFormula.SOLVER, Solvers.Z3)
-                .map(ComputeSolutionEnumeration::new).computeResult();
-        
-       IFormula expectedFormula = new And(new Literal("Salad"), new BiImplies(new Literal("Salad"), new Literal("Arugula_def")),
-        		new BiImplies(new Literal("Salad"), new Literal("Veggies")), new Or(new BiImplies(new Literal("Veggies"), new Literal("Tomatoes")),
-        		new BiImplies(new Literal("Veggies"), new Literal("Beets")), new BiImplies(new Literal("Veggies"), new Literal("Cucumber")),
-        		new BiImplies(new Literal("Veggies"), new Literal("Fennel"))), new Implies(new Literal("Fennel"), new And(new Literal("Beets"), 
-        		new Not(new Literal("Cucumber")))), new GreaterEqual(new IntegerAdd(new Constant(90l), new Constant(100l)), new Constant(80d)),
+        IFormula expectedFormula = new Reference(new And(new And(new And(new Literal("Veggies"), new Or(new Literal("Tomatoes"), new Literal("Cucumber"),
+    		    new Literal("Fennel"), new Literal("Beets")))), 
+    		    new Implies(new Literal("Fennel"), new And(new Literal("Beets"), new Not(new Literal("Cucumber")))), 
+    		    new GreaterEqual(new IntegerAdd(new Constant(90l), new Constant(100l)), new Constant(80d)),
         		new LessThan(new IntegerMultiply(new Constant(80l), new Constant(100l)), new Constant(100000d)),
-                new Equals(new Constant(100l), new Constant(100d)), new BiImplies(new Literal("Beets"), new Or(new Literal("Cucumber"), new Not(new Literal("Tomatoes")))),
+                new Equals(new Constant(100l), new Constant(100d)), 
+                new BiImplies(new Literal("Beets"), new Or(new Literal("Cucumber"), new Not(new Literal("Tomatoes")))),
                 new LessEqual(new IntegerAdd(new Constant(100l), new IntegerMultiply(new Constant(-1l), new Constant(80l))), new Constant(30d)),
-                new GreaterThan(new IntegerDivide(new Constant(100l), new Constant(25l)), new Constant(3d)), new Equals(new Constant("Cherry"), new Constant("Cherry")),
-                new Implies(new And(new Literal("Arugula_def")), new Equals(new StringLength(new Variable("Arugula_val")), new Constant(7d))));
-    	
-    	final Result<List<List<BooleanFormula>>> expectedResult =
-                Computations.of(expectedFormula)
-                .map(ComputeJavaSMTFormula::new)
-                .set(ComputeJavaSMTFormula.SOLVER, Solvers.Z3)
-                .map(ComputeSolutionEnumeration::new).computeResult();
-    	
-    	int size = expectedResult.get().size();
-    	Assertions.assertEquals(expectedResult.get().size(), computedResult.get().size());
-   
-    }
+                new GreaterThan(new IntegerDivide(new Constant(100l), new Constant(25l)), new Constant(3d)), 
+                new Equals(new Constant("Cherry"), new Constant("Cherry")),
+                new Implies(new And(new Literal("Arugula_def")), 
+                new Equals(new StringLength(new Variable("Arugula_val", String.class)), new Constant(7d)))));
+       
+       Assertions.assertEquals(computedFormula.get(), expectedFormula);
+   }
+    
+   @Test
+   public void testEnumerateSolutionsWithMinimalSaladFeatureModel() {
+	   IFormula expectedFormula = new Reference(new And(new And(new And(new Literal("Veggies"), new Or(new Literal("Tomatoes"), new Literal("Cucumber"),
+   		    new Literal("Fennel"), new Literal("Beets")))), 
+   		    new Implies(new Literal("Fennel"), new And(new Literal("Beets"), new Not(new Literal("Cucumber")))), 
+   		    new GreaterEqual(new IntegerAdd(new Constant(90l), new Constant(100l)), new Constant(80d)),
+       		new LessThan(new IntegerMultiply(new Constant(80l), new Constant(100l)), new Constant(100000d)),
+            new Equals(new Constant(100l), new Constant(100d)), 
+            new BiImplies(new Literal("Beets"), new Or(new Literal("Cucumber"), new Not(new Literal("Tomatoes")))),
+            new LessEqual(new IntegerAdd(new Constant(100l), new IntegerMultiply(new Constant(-1l), new Constant(80l))), new Constant(30d)),
+            new GreaterThan(new IntegerDivide(new Constant(100l), new Constant(25l)), new Constant(3d)), 
+            new Equals(new Constant("Cherry"), new Constant("Cherry")),
+            new Implies(new And(new Literal("Arugula_def")), 
+            new Equals(new StringLength(new Variable("Arugula_val", String.class)), new Constant(7d)))));
+	   
+	   final Result<List<List<BooleanFormula>>> result =
+               Computations.of(expectedFormula)
+               .map(ComputeJavaSMTFormula::new)
+               .set(ComputeJavaSMTFormula.SOLVER, Solvers.Z3)
+               .map(ComputeSolutionEnumeration::new).computeResult();
+       assertTrue(result.isPresent(), () -> Problem.printProblems(result.getProblems()));   
+   }
+	   
 }
