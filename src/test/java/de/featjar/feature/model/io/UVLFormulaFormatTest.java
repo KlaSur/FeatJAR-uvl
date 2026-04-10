@@ -20,20 +20,46 @@
  */
 package de.featjar.feature.model.io;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.sosy_lab.java_smt.SolverContextFactory.Solvers;
+import org.sosy_lab.java_smt.api.BooleanFormula;
+import org.sosy_lab.java_smt.api.FormulaManager;
+import org.sosy_lab.java_smt.api.FunctionDeclaration;
+import org.sosy_lab.java_smt.api.visitors.BooleanFormulaVisitor;
+import org.sosy_lab.java_smt.api.visitors.DefaultBooleanFormulaVisitor;
+
 import de.featjar.Common;
 import de.featjar.FormatTest;
 import de.featjar.analysis.javasmt.computation.ComputeJavaSMTFormula;
-import de.featjar.analysis.javasmt.computation.ComputeSolutionCount;
 import de.featjar.analysis.javasmt.computation.ComputeSolutionEnumeration;
+import de.featjar.analysis.javasmt.solver.FormulaToJavaSMT;
+import de.featjar.analysis.javasmt.solver.FormulaToJavaSMT.VariableReference;
+import de.featjar.analysis.javasmt.solver.JavaSMTFormula;
 import de.featjar.base.FeatJAR;
 import de.featjar.base.computation.Computations;
-import de.featjar.base.data.Problem;
 import de.featjar.base.data.Result;
 import de.featjar.base.io.format.IFormat;
 import de.featjar.base.io.input.FileInputMapper;
 import de.featjar.feature.model.io.uvl.UVLFormulaFormat;
+import de.featjar.formula.VariableMap;
+import de.featjar.formula.assignment.BooleanAssignment;
 import de.featjar.formula.structure.IFormula;
-import de.featjar.formula.structure.connective.*;
+import de.featjar.formula.structure.connective.And;
+import de.featjar.formula.structure.connective.BiImplies;
+import de.featjar.formula.structure.connective.Implies;
+import de.featjar.formula.structure.connective.Not;
+import de.featjar.formula.structure.connective.Or;
+import de.featjar.formula.structure.connective.Reference;
 import de.featjar.formula.structure.predicate.Equals;
 import de.featjar.formula.structure.predicate.GreaterEqual;
 import de.featjar.formula.structure.predicate.GreaterThan;
@@ -46,23 +72,6 @@ import de.featjar.formula.structure.term.function.integer.IntegerMultiply;
 import de.featjar.formula.structure.term.function.string.StringLength;
 import de.featjar.formula.structure.term.value.Constant;
 import de.featjar.formula.structure.term.value.Variable;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.io.IOException;
-import java.math.BigInteger;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.objenesis.ObjenesisBase;
-import org.sosy_lab.java_smt.SolverContextFactory.Solvers;
-import org.sosy_lab.java_smt.api.BooleanFormula;
 
 public class UVLFormulaFormatTest extends Common {
 
@@ -166,12 +175,98 @@ public class UVLFormulaFormatTest extends Common {
             new Implies(new And(new Literal("Arugula_def")), 
             new Equals(new StringLength(new Variable("Arugula_val", String.class)), new Constant(7d)))));
 	   
-	   final Result<List<List<BooleanFormula>>> result =
+	   final Result<JavaSMTFormula> result =
                Computations.of(expectedFormula)
                .map(ComputeJavaSMTFormula::new)
                .set(ComputeJavaSMTFormula.SOLVER, Solvers.Z3)
-               .map(ComputeSolutionEnumeration::new).computeResult();
-       assertTrue(result.isPresent(), () -> Problem.printProblems(result.getProblems()));   
+               .computeResult();
+	   
+	   FormulaToJavaSMT formulaToJavaSmt = result.get().getTranslator();
+	   VariableMap variableMap = result.get().getVariableMap();
+	   BooleanFormula formula = formulaToJavaSmt.nodeToFormula(expectedFormula);
+	   FormulaManager formulaManager = formulaToJavaSmt.getCurrentFormulaManager();
+	  
+	   List<VariableReference> variableReferences = formulaToJavaSmt.getMappings();
+	   BooleanFormula formula1 = (BooleanFormula) variableReferences.get(1).getJavaSmtVariable();
+	
+	   
+	   JavaSMTFormula javaSMTFormula = result.get();
+	   Result<List<List<BooleanFormula>>> result4 = Computations.of(javaSMTFormula)
+			   .map(ComputeSolutionEnumeration::new)
+			   .computeResult();
+	   
+	   List<List<BooleanFormula>> booleanAssignments = result4.get();
+	   
+       BooleanFormulaVisitor<Integer> booleanFormulaVisitor = (BooleanFormulaVisitor<Integer>) new DefaultBooleanFormulaVisitor<Integer>() {
+		   public Integer visitNot(BooleanFormula operand) {
+			   Variable variable = variableReferences.stream().filter(r -> r.getJavaSmtVariable().equals(operand))
+					   .map(r -> r.getVariable()).findFirst().orElse(null);
+			   
+			   Integer index = variableMap.get(variable.getName()).get();
+			  
+			   return -index;
+		   }
+		   
+		   public Integer visitAtom(BooleanFormula atom, FunctionDeclaration<BooleanFormula> funcDecl) {
+			   Variable variable = variableReferences.stream().filter(r -> r.getJavaSmtVariable().equals(atom))
+					   .map(r -> r.getVariable()).findFirst().orElse(null);
+			   
+			   Integer index = variableMap.get(variable.getName()).get();
+			   
+			   return index;
+		   }
+
+		   public Integer visitDefault() {
+			   return -1000;
+		   }
+	    };
+	   
+	    Integer inte = formulaManager.getBooleanFormulaManager().visit((BooleanFormula) formula1, booleanFormulaVisitor);
+	    
+	    List<BooleanAssignment> computedAssignments = new ArrayList<BooleanAssignment>();
+	    for (List<BooleanFormula> booleanAssignment : booleanAssignments) {
+	    	BooleanAssignment satisfyingAssignment = new BooleanAssignment();
+	    	for (BooleanFormula booleanVariable : booleanAssignment) {
+	    		Integer assignment = formulaManager.getBooleanFormulaManager()
+	    				.visit(booleanVariable, booleanFormulaVisitor);
+	    		satisfyingAssignment = satisfyingAssignment.addAll(assignment.intValue());
+	    	}
+	    	computedAssignments.add(satisfyingAssignment);
+	    }
+	
+	   
+	   
+	   
+	    List<BooleanAssignment> expectedAssignments = new ArrayList<BooleanAssignment>();
+	   BooleanAssignment satisfyingAssignment1 = new BooleanAssignment(1, 2, -3, -4, -5, -6);
+	   BooleanAssignment satisfyingAssignment2 = new BooleanAssignment(1, -2, -4, 5, -6);
+	   BooleanAssignment satisfyingAssignment3 = new BooleanAssignment(1, -2, -3, 4, 5, -6);
+	   BooleanAssignment satisfyingAssignment4 = new BooleanAssignment(1, 2, 3, -4, 5, -6);
+	   BooleanAssignment satisfyingAssignment5 = new BooleanAssignment(1, 2, -3, -4, -5, 6);
+	   BooleanAssignment satisfyingAssignment6 = new BooleanAssignment(1, -2, -4, 5, 6);
+	   BooleanAssignment satisfyingAssignment7 = new BooleanAssignment(1, 2, 3, -4, 5, 6);
+	   BooleanAssignment satisfyingAssignment8 = new BooleanAssignment(1, -2, -3, 4, 5, 6);
+	   
+	   expectedAssignments.add(satisfyingAssignment1);
+	   expectedAssignments.add(satisfyingAssignment2);
+	   expectedAssignments.add(satisfyingAssignment3);
+	   expectedAssignments.add(satisfyingAssignment4);
+	   expectedAssignments.add(satisfyingAssignment5);
+	   expectedAssignments.add(satisfyingAssignment6);
+	   expectedAssignments.add(satisfyingAssignment7);
+	   expectedAssignments.add(satisfyingAssignment8);
+	   
+	   
+	   Assertions.assertEquals(computedAssignments, expectedAssignments);
+	   
+	   
+	   
+         
+	   //List<VariableReference> result2 = result.get().getTranslator().getMappings();
+               
+               
+       // Result<List<List<BooleanFormula>>> result3 = result.map(ComputeSolutionEnumeration::new).computeResult();
+       //assertTrue(result.isPresent(), () -> Problem.printProblems(result.getProblems()));   
    }
 	   
 }
