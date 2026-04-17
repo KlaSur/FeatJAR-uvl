@@ -175,28 +175,29 @@ public class UVLFormulaFormatTest extends Common {
             new Implies(new And(new Literal("Arugula_def")), 
             new Equals(new StringLength(new Variable("Arugula_val", String.class)), new Constant(7d)))));
 	   
-	   final Result<JavaSMTFormula> result =
+	   final Result<JavaSMTFormula> javaSMTFormulaResult =
                Computations.of(expectedFormula)
                .map(ComputeJavaSMTFormula::new)
                .set(ComputeJavaSMTFormula.SOLVER, Solvers.Z3)
                .computeResult();
 	   
-	   FormulaToJavaSMT formulaToJavaSmt = result.get().getTranslator();
-	   VariableMap variableMap = result.get().getVariableMap();
-	   BooleanFormula formula = formulaToJavaSmt.nodeToFormula(expectedFormula);
-	   FormulaManager formulaManager = formulaToJavaSmt.getCurrentFormulaManager();
-	  
-	   List<VariableReference> variableReferences = formulaToJavaSmt.getMappings();
-	   BooleanFormula formula1 = (BooleanFormula) variableReferences.get(1).getJavaSmtVariable();
-	
+	   JavaSMTFormula javaSMTFormula = javaSMTFormulaResult.get();
+	   FormulaToJavaSMT formulaToJavaSmt = javaSMTFormula.getTranslator();
+	   VariableMap variableMap = javaSMTFormula.getVariableMap();
 	   
-	   JavaSMTFormula javaSMTFormula = result.get();
-	   Result<List<List<BooleanFormula>>> result4 = Computations.of(javaSMTFormula)
+	   formulaToJavaSmt.nodeToFormula(expectedFormula);
+	   FormulaManager formulaManager = formulaToJavaSmt.getCurrentFormulaManager();
+	   List<VariableReference> variableReferences = formulaToJavaSmt.getMappings();
+	   
+	   Result<List<List<BooleanFormula>>> booleanAssignmentsResult = Computations.of(javaSMTFormula)
 			   .map(ComputeSolutionEnumeration::new)
 			   .computeResult();
 	   
-	   List<List<BooleanFormula>> booleanAssignments = result4.get();
+	   List<List<BooleanFormula>> booleanAssignments = booleanAssignmentsResult.get();
 	   
+	   
+	   
+	   // define a BooleanFormulaVisitor which returns the index of the current atom
        BooleanFormulaVisitor<Integer> booleanFormulaVisitor = (BooleanFormulaVisitor<Integer>) new DefaultBooleanFormulaVisitor<Integer>() {
 		   public Integer visitNot(BooleanFormula operand) {
 			   Variable variable = variableReferences.stream().filter(r -> r.getJavaSmtVariable().equals(operand))
@@ -220,9 +221,10 @@ public class UVLFormulaFormatTest extends Common {
 			   return -1000;
 		   }
 	    };
-	   
-	    Integer inte = formulaManager.getBooleanFormulaManager().visit((BooleanFormula) formula1, booleanFormulaVisitor);
 	    
+	    
+	    
+	    // create computed assignments
 	    List<BooleanAssignment> computedAssignments = new ArrayList<BooleanAssignment>();
 	    for (List<BooleanFormula> booleanAssignment : booleanAssignments) {
 	    	BooleanAssignment satisfyingAssignment = new BooleanAssignment();
@@ -235,9 +237,8 @@ public class UVLFormulaFormatTest extends Common {
 	    }
 	
 	   
-	   
-	   
-	    List<BooleanAssignment> expectedAssignments = new ArrayList<BooleanAssignment>();
+	   // create expected assignments
+	   List<BooleanAssignment> expectedAssignments = new ArrayList<BooleanAssignment>();
 	   BooleanAssignment satisfyingAssignment1 = new BooleanAssignment(1, 2, -3, -4, -5, -6);
 	   BooleanAssignment satisfyingAssignment2 = new BooleanAssignment(1, -2, -4, 5, -6);
 	   BooleanAssignment satisfyingAssignment3 = new BooleanAssignment(1, -2, -3, 4, 5, -6);
@@ -255,18 +256,9 @@ public class UVLFormulaFormatTest extends Common {
 	   expectedAssignments.add(satisfyingAssignment6);
 	   expectedAssignments.add(satisfyingAssignment7);
 	   expectedAssignments.add(satisfyingAssignment8);
+	  
 	   
-	   
-	   Assertions.assertEquals(computedAssignments, expectedAssignments);
-	   
-	   
-	   
-         
-	   //List<VariableReference> result2 = result.get().getTranslator().getMappings();
-               
-               
-       // Result<List<List<BooleanFormula>>> result3 = result.map(ComputeSolutionEnumeration::new).computeResult();
-       //assertTrue(result.isPresent(), () -> Problem.printProblems(result.getProblems()));   
+	   Assertions.assertEquals(computedAssignments, expectedAssignments); 
    }
 	   
 }
