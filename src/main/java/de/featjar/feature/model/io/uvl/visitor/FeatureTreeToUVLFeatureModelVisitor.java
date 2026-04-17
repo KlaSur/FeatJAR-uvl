@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 FeatJAR-Development-Team
+ * Copyright (C) 2026 FeatJAR-Development-Team
  *
  * This file is part of FeatJAR-uvl.
  *
@@ -20,7 +20,9 @@
  */
 package de.featjar.feature.model.io.uvl.visitor;
 
-import static de.vill.model.FeatureType.*;
+import static de.vill.model.FeatureType.BOOL;
+import static de.vill.model.FeatureType.INT;
+import static de.vill.model.FeatureType.REAL;
 import static de.vill.model.FeatureType.STRING;
 
 import de.featjar.base.data.Name;
