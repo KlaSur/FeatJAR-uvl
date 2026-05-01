@@ -35,6 +35,9 @@ import org.junit.jupiter.api.Test;
 import de.featjar.FormatTest;
 import de.featjar.analysis.sat4j.computation.ComputeSatisfiableSAT4J;
 import de.featjar.base.computation.Computations;
+import de.featjar.base.data.Attribute;
+import de.featjar.base.data.Attributes;
+import de.featjar.base.data.Name;
 import de.featjar.base.data.Result;
 import de.featjar.base.data.identifier.Identifiers;
 import de.featjar.base.io.format.IFormat;
@@ -281,5 +284,121 @@ public class UVLFeatureModelFormatTest {
         Assertions.assertEquals(constraints.get(2).getFormula().getChild(0).get(), greaterThanConstraint);
         Assertions.assertEquals(constraints.get(3).getFormula().getChild(0).get(), notEqualsConstraint);
         Assertions.assertEquals(constraints.get(4).getFormula().getChild(0).get(), stringLengthConstraint);
+    }
+    
+    @Test
+    void testUVLMinimalSaladFeatureModelFormatParse() throws IOException {
+    	IFormat<IFeatureModel> format = new UVLFeatureModelFormat();
+        Result<IFeatureModel> result = format.parse(new FileInputMapper(
+                Path.of("src", "test", "resources", "uvl", "MinimalSaladFeatureModel.uvl"),
+                Charset.defaultCharset()));
+
+        if (result.isEmpty()) {
+            Assertions.fail();
+        }
+        
+        IFeatureModel parsedFeatureModel = result.get();
+    	
+//    	IFeatureTree saladRoot =
+//                featureModel.mutate().addFeatureTreeRoot(featureModel.mutate().addFeature("Salad"));
+//        saladRoot.mutate().toAndGroup();
+//
+//        // mandatory Veggies
+//        IFeature mandatoryVeggies = featureModel.mutate().addFeature("Veggies");
+//        IFeatureTree mandatoryVeggiesTree = saladRoot.mutate().addFeatureBelow(mandatoryVeggies);
+//        mandatoryVeggiesTree.mutate().makeMandatory();
+//        mandatoryVeggiesTree.mutate().toOrGroup();
+//        
+//        // optional String Arugula {Freshness 90, FoodMiles 20}
+//        IFeature optionalArugula = featureModel.mutate().addFeature("Arugula");
+//        optionalArugula.mutate().setType(String.class);
+//        IFeatureTree optionalArugulaTree = saladRoot.mutate().addFeatureBelow(optionalArugula);
+//        optionalArugulaTree.mutate().makeOptional();
+//        
+//        
+//        // Tomatoes {Freshness 30, FoodMiles 100, tomatoType 'Cherry'}
+//        IFeature tomatoes = featureModel.mutate().addFeature("Tomatoes");
+//        IFeatureTree tomatoesTree = mandatoryVeggiesTree.mutate().addFeatureBelow(tomatoes);
+//        
+//        Attribute<Integer> tomatoesFreshness = Attributes.get(new Name("Freshness"), Integer.class);
+//        tomatoesTree.mutate().setAttributeValue(tomatoesFreshness, 30);
+//        
+//        Attribute<Integer> tomatoesFoodMiles = Attributes.get(new Name("FoodMiles"), Integer.class);
+//        tomatoesTree.mutate().setAttributeValue(tomatoesFoodMiles, 100);
+//        
+//        Attribute<String> tomatoesType = Attributes.get(new Name("tomatoType"), String.class);
+//        tomatoesTree.mutate().setAttributeValue(tomatoesType, "Cherry");
+//        
+//        
+//        // Cucumber {Freshness 25, FoodMiles 80}
+//        IFeature cucumber = featureModel.mutate().addFeature("Cucumber");
+//        IFeatureTree cucumberTree = mandatoryVeggiesTree.mutate().addFeatureBelow(cucumber);
+//        
+//        Attribute<Integer> cucumberFreshness = Attributes.get(new Name("Freshness"), Integer.class);
+//        cucumberTree.mutate().setAttributeValue(cucumberFreshness, 25);
+//        
+//        Attribute<Integer> cucumberFoodMiles = Attributes.get(new Name("FoodMiles"), Integer.class);
+//        cucumberTree.mutate().setAttributeValue(cucumberFoodMiles, 80);
+//        
+//        
+//        // Fennel {Freshness 100, FoodMiles 11}
+//        IFeature fennel = featureModel.mutate().addFeature("Fennel");
+//        IFeatureTree fennelTree = mandatoryVeggiesTree.mutate().addFeatureBelow(fennel);
+//        
+//        Attribute<Integer> fennelFreshness = Attributes.get(new Name("Freshness"), Integer.class);
+//        fennelTree.mutate().setAttributeValue(fennelFreshness, 100);
+//        
+//        Attribute<Integer> fennelFoodMiles = Attributes.get(new Name("FoodMiles"), Integer.class);
+//        fennelTree.mutate().setAttributeValue(fennelFoodMiles, 11);
+//        
+//        
+//        // Beets {Freshness 150, FoodMiles 5}
+//        IFeature beets = featureModel.mutate().addFeature("Beets");
+//        IFeatureTree beetsTree = mandatoryVeggiesTree.mutate().addFeatureBelow(beets);
+//        
+//        Attribute<Integer> beetsFreshness = Attributes.get(new Name("Freshness"), Integer.class);
+//        beetsTree.mutate().setAttributeValue(beetsFreshness, 150);
+//        
+//        Attribute<Integer> beetsFoodMiles = Attributes.get(new Name("FoodMiles"), Integer.class);
+//        beetsTree.mutate().setAttributeValue(beetsFoodMiles, 5);
+//        
+        
+        // testing Salad feature
+        IFeature rootFeature = parsedFeatureModel.getFeature("Salad").get();
+        List<String> rootChildrenNames = rootFeature.getFeatureTree().get().getChildren().stream()
+                .map((it) -> it.getFeature().getName().get())
+                .collect(Collectors.toList());
+        Assertions.assertEquals(2, rootChildrenNames.size());
+        Assertions.assertTrue(rootChildrenNames.contains("Veggies"));
+        Assertions.assertTrue(rootChildrenNames.contains("Arugula"));
+        
+        // testing Veggies feature
+        IFeature mandatoryVeggies = parsedFeatureModel.getFeature("Veggies").get();
+        Assertions.assertTrue(
+        		mandatoryVeggies.getFeatureTree().get().getParentGroup().get().isOr());
+        Assertions.assertTrue(mandatoryVeggies.getFeatureTree().get().isMandatory());
+        List<String> mandatoryVeggiesChildren = mandatoryVeggies.getFeatureTree().get().getChildren().stream()
+                .map((it) -> it.getFeature().getName().get())
+                .collect(Collectors.toList());
+        Assertions.assertEquals(4, mandatoryVeggiesChildren.size());
+        Assertions.assertTrue(mandatoryVeggiesChildren.contains("Tomatoes"));
+        Assertions.assertTrue(mandatoryVeggiesChildren.contains("Cucumber"));
+        Assertions.assertTrue(mandatoryVeggiesChildren.contains("Fennel"));
+        Assertions.assertTrue(mandatoryVeggiesChildren.contains("Beets"));
+        
+        // testing Arugula feature
+        IFeature optionalArugula = parsedFeatureModel.getFeature("Arugula").get();
+        Assertions.assertTrue(optionalArugula.getFeatureTree().get().isOptional());
+        List<String> optionalArugulaChildren = optionalArugula.getFeatureTree().get().getChildren().stream()
+                .map((it) -> it.getFeature().getName().get())
+                .collect(Collectors.toList());
+        Assertions.assertEquals(0, optionalArugulaChildren.size());
+       
+        
+        
+        
+        
+     
+        
     }
 }
