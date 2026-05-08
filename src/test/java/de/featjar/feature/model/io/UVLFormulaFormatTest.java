@@ -157,13 +157,6 @@ public class UVLFormulaFormatTest extends Common {
                 new Implies(new And(new Literal("Arugula_def")), 
                 new Equals(new StringLength(new Variable("Arugula_val", String.class)), new Constant(7d)))));
         
-//        Result<String> result = format.serialize(expectedFormula);
-//        System.out.println(result.get());
-
-        //if (result.isEmpty()) {
-        //    Assertions.fail();
-        //}
-       
        Assertions.assertEquals(computedFormula.get(), expectedFormula);
    }   
 }

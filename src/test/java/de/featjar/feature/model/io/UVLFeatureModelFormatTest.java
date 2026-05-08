@@ -26,7 +26,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -35,9 +37,7 @@ import org.junit.jupiter.api.Test;
 import de.featjar.FormatTest;
 import de.featjar.analysis.sat4j.computation.ComputeSatisfiableSAT4J;
 import de.featjar.base.computation.Computations;
-import de.featjar.base.data.Attribute;
-import de.featjar.base.data.Attributes;
-import de.featjar.base.data.Name;
+import de.featjar.base.data.IAttribute;
 import de.featjar.base.data.Result;
 import de.featjar.base.data.identifier.Identifiers;
 import de.featjar.base.io.format.IFormat;
@@ -298,84 +298,20 @@ public class UVLFeatureModelFormatTest {
         }
         
         IFeatureModel parsedFeatureModel = result.get();
-    	
-//    	IFeatureTree saladRoot =
-//                featureModel.mutate().addFeatureTreeRoot(featureModel.mutate().addFeature("Salad"));
-//        saladRoot.mutate().toAndGroup();
-//
-//        // mandatory Veggies
-//        IFeature mandatoryVeggies = featureModel.mutate().addFeature("Veggies");
-//        IFeatureTree mandatoryVeggiesTree = saladRoot.mutate().addFeatureBelow(mandatoryVeggies);
-//        mandatoryVeggiesTree.mutate().makeMandatory();
-//        mandatoryVeggiesTree.mutate().toOrGroup();
-//        
-//        // optional String Arugula {Freshness 90, FoodMiles 20}
-//        IFeature optionalArugula = featureModel.mutate().addFeature("Arugula");
-//        optionalArugula.mutate().setType(String.class);
-//        IFeatureTree optionalArugulaTree = saladRoot.mutate().addFeatureBelow(optionalArugula);
-//        optionalArugulaTree.mutate().makeOptional();
-//        
-//        
-//        // Tomatoes {Freshness 30, FoodMiles 100, tomatoType 'Cherry'}
-//        IFeature tomatoes = featureModel.mutate().addFeature("Tomatoes");
-//        IFeatureTree tomatoesTree = mandatoryVeggiesTree.mutate().addFeatureBelow(tomatoes);
-//        
-//        Attribute<Integer> tomatoesFreshness = Attributes.get(new Name("Freshness"), Integer.class);
-//        tomatoesTree.mutate().setAttributeValue(tomatoesFreshness, 30);
-//        
-//        Attribute<Integer> tomatoesFoodMiles = Attributes.get(new Name("FoodMiles"), Integer.class);
-//        tomatoesTree.mutate().setAttributeValue(tomatoesFoodMiles, 100);
-//        
-//        Attribute<String> tomatoesType = Attributes.get(new Name("tomatoType"), String.class);
-//        tomatoesTree.mutate().setAttributeValue(tomatoesType, "Cherry");
-//        
-//        
-//        // Cucumber {Freshness 25, FoodMiles 80}
-//        IFeature cucumber = featureModel.mutate().addFeature("Cucumber");
-//        IFeatureTree cucumberTree = mandatoryVeggiesTree.mutate().addFeatureBelow(cucumber);
-//        
-//        Attribute<Integer> cucumberFreshness = Attributes.get(new Name("Freshness"), Integer.class);
-//        cucumberTree.mutate().setAttributeValue(cucumberFreshness, 25);
-//        
-//        Attribute<Integer> cucumberFoodMiles = Attributes.get(new Name("FoodMiles"), Integer.class);
-//        cucumberTree.mutate().setAttributeValue(cucumberFoodMiles, 80);
-//        
-//        
-//        // Fennel {Freshness 100, FoodMiles 11}
-//        IFeature fennel = featureModel.mutate().addFeature("Fennel");
-//        IFeatureTree fennelTree = mandatoryVeggiesTree.mutate().addFeatureBelow(fennel);
-//        
-//        Attribute<Integer> fennelFreshness = Attributes.get(new Name("Freshness"), Integer.class);
-//        fennelTree.mutate().setAttributeValue(fennelFreshness, 100);
-//        
-//        Attribute<Integer> fennelFoodMiles = Attributes.get(new Name("FoodMiles"), Integer.class);
-//        fennelTree.mutate().setAttributeValue(fennelFoodMiles, 11);
-//        
-//        
-//        // Beets {Freshness 150, FoodMiles 5}
-//        IFeature beets = featureModel.mutate().addFeature("Beets");
-//        IFeatureTree beetsTree = mandatoryVeggiesTree.mutate().addFeatureBelow(beets);
-//        
-//        Attribute<Integer> beetsFreshness = Attributes.get(new Name("Freshness"), Integer.class);
-//        beetsTree.mutate().setAttributeValue(beetsFreshness, 150);
-//        
-//        Attribute<Integer> beetsFoodMiles = Attributes.get(new Name("FoodMiles"), Integer.class);
-//        beetsTree.mutate().setAttributeValue(beetsFoodMiles, 5);
-//        
         
-        // testing Salad feature
-        IFeature rootFeature = parsedFeatureModel.getFeature("Salad").get();
-        List<String> rootChildrenNames = rootFeature.getFeatureTree().get().getChildren().stream()
+        // Salad 
+        IFeature saladRoot = parsedFeatureModel.getFeature("Salad").get();
+        List<String> saladRootChildren = saladRoot.getFeatureTree().get().getChildren().stream()
                 .map((it) -> it.getFeature().getName().get())
                 .collect(Collectors.toList());
-        Assertions.assertEquals(2, rootChildrenNames.size());
-        Assertions.assertTrue(rootChildrenNames.contains("Veggies"));
-        Assertions.assertTrue(rootChildrenNames.contains("Arugula"));
+        Assertions.assertEquals(2, saladRootChildren.size());
+        Assertions.assertTrue(saladRootChildren.contains("Veggies"));
+        Assertions.assertTrue(saladRootChildren.contains("Arugula"));
         
-        // testing Veggies feature
+        // Veggies 
         IFeature mandatoryVeggies = parsedFeatureModel.getFeature("Veggies").get();
         Assertions.assertTrue(
-        		mandatoryVeggies.getFeatureTree().get().getParentGroup().get().isOr());
+        		mandatoryVeggies.getFeatureTree().get().getParentGroup().get().isAnd());
         Assertions.assertTrue(mandatoryVeggies.getFeatureTree().get().isMandatory());
         List<String> mandatoryVeggiesChildren = mandatoryVeggies.getFeatureTree().get().getChildren().stream()
                 .map((it) -> it.getFeature().getName().get())
@@ -386,19 +322,85 @@ public class UVLFeatureModelFormatTest {
         Assertions.assertTrue(mandatoryVeggiesChildren.contains("Fennel"));
         Assertions.assertTrue(mandatoryVeggiesChildren.contains("Beets"));
         
-        // testing Arugula feature
+        // Arugula 
         IFeature optionalArugula = parsedFeatureModel.getFeature("Arugula").get();
+        Assertions.assertTrue(optionalArugula.getType() == String.class);
         Assertions.assertTrue(optionalArugula.getFeatureTree().get().isOptional());
-        List<String> optionalArugulaChildren = optionalArugula.getFeatureTree().get().getChildren().stream()
-                .map((it) -> it.getFeature().getName().get())
-                .collect(Collectors.toList());
-        Assertions.assertEquals(0, optionalArugulaChildren.size());
-       
+        Assertions.assertTrue(optionalArugula.getFeatureTree().get().getChildren().isEmpty());
         
+        Map<IAttribute<?>, Object> arugulaAttributes = optionalArugula.getAttributes().get();
+        List<Map.Entry<IAttribute<?>, Object>> arugulaFreshness = arugulaAttributes.entrySet().stream().filter(a -> a.getKey().getSimpleName().equals("Freshness") && 
+        		a.getKey().getType().getClassType().equals(Long.class) && ((Long) a.getValue()).longValue() == 90).collect(Collectors.toList());
+        Assertions.assertTrue(arugulaFreshness.size() == 1);
         
+        List<Map.Entry<IAttribute<?>, Object>> arugulaFoodMiles = arugulaAttributes.entrySet().stream().filter(a -> a.getKey().getSimpleName().equals("FoodMiles") && 
+        		a.getKey().getType().getClassType().equals(Long.class) && ((Long) a.getValue()).longValue() == 20).collect(Collectors.toList());
+        Assertions.assertTrue(arugulaFoodMiles.size() == 1);
         
+        // Tomatoes 
+        IFeature tomatoes = parsedFeatureModel.getFeature("Tomatoes").get();
+        Assertions.assertTrue(tomatoes.getFeatureTree().get().getChildren().isEmpty());
+        Assertions.assertTrue(tomatoes.getFeatureTree().get().getParentGroup().get().isOr());
+        Map<IAttribute<?>, Object> tomatoesAttributes = tomatoes.getAttributes().get();
+        List<Map.Entry<IAttribute<?>, Object>> tomatoesFreshness = tomatoesAttributes.entrySet().stream().filter(a -> a.getKey().getSimpleName().equals("Freshness") && 
+        		a.getKey().getType().getClassType().equals(Long.class) && ((Long) a.getValue()).longValue() == 30).collect(Collectors.toList());
+        Assertions.assertTrue(tomatoesFreshness.size() == 1);
         
-     
+        List<Map.Entry<IAttribute<?>, Object>> tomatoesFoodMiles = tomatoesAttributes.entrySet().stream().filter(a -> a.getKey().getSimpleName().equals("FoodMiles") && 
+        		a.getKey().getType().getClassType().equals(Long.class) && ((Long) a.getValue()).longValue() == 100).collect(Collectors.toList());
+        Assertions.assertTrue(tomatoesFoodMiles.size() == 1);
         
+        List<Map.Entry<IAttribute<?>, Object>> tomatoType = tomatoesAttributes.entrySet().stream().filter(a -> a.getKey().getSimpleName().equals("tomatoType") && 
+        		a.getKey().getType().getClassType().equals(String.class) && ((String) a.getValue()).toString().equals("Cherry")).collect(Collectors.toList());
+        Assertions.assertTrue(tomatoType.size() == 1);
+        
+        // Cucumber 
+        IFeature cucumber = parsedFeatureModel.getFeature("Cucumber").get();
+        Assertions.assertTrue(cucumber.getFeatureTree().get().getChildren().isEmpty());
+        Assertions.assertTrue(cucumber.getFeatureTree().get().getParentGroup().get().isOr());
+        Map<IAttribute<?>, Object> cucumberAttributes = cucumber.getAttributes().get();
+        List<Map.Entry<IAttribute<?>, Object>> cucumberFreshness = cucumberAttributes.entrySet().stream().filter(a -> a.getKey().getSimpleName().equals("Freshness") && 
+        		a.getKey().getType().getClassType().equals(Long.class) && ((Long) a.getValue()).longValue() == 25).collect(Collectors.toList());
+        Assertions.assertTrue(cucumberFreshness.size() == 1);
+        
+        List<Map.Entry<IAttribute<?>, Object>> cucumberFoodMiles = cucumberAttributes.entrySet().stream().filter(a -> a.getKey().getSimpleName().equals("FoodMiles") && 
+        		a.getKey().getType().getClassType().equals(Long.class) && ((Long) a.getValue()).longValue() == 80).collect(Collectors.toList());
+        Assertions.assertTrue(cucumberFoodMiles.size() == 1);
+        
+        // Fennel
+        IFeature fennel = parsedFeatureModel.getFeature("Fennel").get();
+        Assertions.assertTrue(fennel.getFeatureTree().get().getChildren().isEmpty());
+        Assertions.assertTrue(fennel.getFeatureTree().get().getParentGroup().get().isOr());
+        Map<IAttribute<?>, Object> fennelAttributes = fennel.getAttributes().get();
+        Assertions.assertTrue(fennelAttributes.entrySet().stream().anyMatch(a -> a.getKey().getSimpleName().equals("Freshness") && 
+        		a.getKey().getType().getClassType().equals(Long.class) && ((Long) a.getValue()).longValue() == 100));
+        
+        List<Map.Entry<IAttribute<?>, Object>> fennelFoodMiles = fennelAttributes.entrySet().stream().filter(a -> a.getKey().getSimpleName().equals("FoodMiles") && 
+        		a.getKey().getType().getClassType().equals(Long.class) && ((Long) a.getValue()).longValue() == 11).collect(Collectors.toList());
+        Assertions.assertTrue(fennelFoodMiles.size() == 1);
+        
+        // Beets
+        IFeature beets = parsedFeatureModel.getFeature("Beets").get();
+        Assertions.assertTrue(beets.getFeatureTree().get().getChildren().isEmpty());
+        Assertions.assertTrue(beets.getFeatureTree().get().getParentGroup().get().isOr());
+        Map<IAttribute<?>, Object> beetsAttributes = beets.getAttributes().get();
+        List<Map.Entry<IAttribute<?>, Object>> beetsFreshness = fennelAttributes.entrySet().stream().filter(a -> a.getKey().getSimpleName().equals("Freshness") && 
+        		a.getKey().getType().getClassType().equals(Long.class) && ((Long) a.getValue()).longValue() == 100).collect(Collectors.toList());
+        Assertions.assertTrue(beetsFreshness.size() == 1);
+        
+        List<Map.Entry<IAttribute<?>, Object>> beetsFoodMiles = fennelAttributes.entrySet().stream().filter(a -> a.getKey().getSimpleName().equals("FoodMiles") && 
+        		a.getKey().getType().getClassType().equals(Long.class) && ((Long) a.getValue()).longValue() == 11).collect(Collectors.toList());
+        Assertions.assertTrue(beetsFoodMiles.size() == 1);
+        
+        Result<String> featureModelString = format.serialize(parsedFeatureModel);
+
+        if (featureModelString.isEmpty()) {
+            Assertions.fail();
+        }
+
+        String expected = new String(
+                Files.readAllBytes(Path.of("src", "test", "resources", "uvl", "MinimalSaladFeatureModel.uvl")));
+        Assertions.assertEquals(expected, featureModelString.get());
+         
     }
 }

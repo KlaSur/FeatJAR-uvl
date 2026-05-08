@@ -113,11 +113,11 @@ public class UVLFeatureModelToFeatureTree {
      */
     private static void createFeatureTree(IFeatureModel featureModel, de.vill.model.Feature rootUVLFeature)
             throws ParseException {
-        LinkedList<de.vill.model.Feature> featureStack = new LinkedList<>();
-        LinkedList<IFeatureTree> featureTreeStack = new LinkedList<>();
-
         IFeature rootFeature = createFeature(featureModel, rootUVLFeature);
         IFeatureTree featureTree = featureModel.mutate().addFeatureTreeRoot(rootFeature);
+        
+        LinkedList<de.vill.model.Feature> featureStack = new LinkedList<>();
+        LinkedList<IFeatureTree> featureTreeStack = new LinkedList<>();
 
         featureStack.push(rootUVLFeature);
         featureTreeStack.push(featureTree);
