@@ -119,10 +119,10 @@ public class UVLConstraintConverter {
 			OrConstraint orConstraint = (OrConstraint) uvlConstraint;
 			return new Or((IFormula) parseUVLConstraintRecursively(orConstraint.getLeft(), dependenciesList), 
 					(IFormula) parseUVLConstraintRecursively(orConstraint.getRight(), dependenciesList));	
-		} else if (uvlConstraint instanceof MultiOrConstraint) {
-			MultiOrConstraint multiOrConstraint = (MultiOrConstraint) uvlConstraint;
-			return new Or(getMultiOrAsList(multiOrConstraint.getConstraintSubParts(), dependenciesList));	
-		} else if (uvlConstraint instanceof EqualEquationConstraint) {
+		} //else if (uvlConstraint instanceof MultiOrConstraint) {
+			//MultiOrConstraint multiOrConstraint = (MultiOrConstraint) uvlConstraint;
+			//return new Or(getMultiOrAsList(multiOrConstraint.getConstraintSubParts(), dependenciesList));	
+		else if (uvlConstraint instanceof EqualEquationConstraint) {
 			EqualEquationConstraint equalConstraint = (EqualEquationConstraint) uvlConstraint;
 			return new Equals(parseExpressionConstraint(equalConstraint.getLeft(), dependenciesList), 
 					parseExpressionConstraint(equalConstraint.getRight(), dependenciesList));
