@@ -1,9 +1,0 @@
-features
-    Salad
-        optional
-            String Arugula {Freshness 90, FoodMiles 20}
-                    
-constraints
-    len(Arugula) == 7
-    
-    
