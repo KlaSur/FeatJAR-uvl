@@ -24,35 +24,19 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.sosy_lab.java_smt.SolverContextFactory.Solvers;
-import org.sosy_lab.java_smt.api.BooleanFormula;
-import org.sosy_lab.java_smt.api.FormulaManager;
-import org.sosy_lab.java_smt.api.FunctionDeclaration;
-import org.sosy_lab.java_smt.api.visitors.BooleanFormulaVisitor;
-import org.sosy_lab.java_smt.api.visitors.DefaultBooleanFormulaVisitor;
 
 import de.featjar.Common;
 import de.featjar.FormatTest;
-import de.featjar.analysis.javasmt.computation.ComputeJavaSMTFormula;
-import de.featjar.analysis.javasmt.computation.ComputeSolutionEnumeration;
-import de.featjar.analysis.javasmt.solver.FormulaToJavaSMT;
-import de.featjar.analysis.javasmt.solver.FormulaToJavaSMT.VariableReference;
-import de.featjar.analysis.javasmt.solver.JavaSMTFormula;
 import de.featjar.base.FeatJAR;
-import de.featjar.base.computation.Computations;
 import de.featjar.base.data.Result;
 import de.featjar.base.io.format.IFormat;
 import de.featjar.base.io.input.FileInputMapper;
 import de.featjar.feature.model.io.uvl.UVLFormulaFormat;
-import de.featjar.formula.VariableMap;
-import de.featjar.formula.assignment.BooleanAssignment;
 import de.featjar.formula.structure.IFormula;
 import de.featjar.formula.structure.connective.And;
 import de.featjar.formula.structure.connective.BiImplies;
@@ -135,10 +119,10 @@ public class UVLFormulaFormatTest extends Common {
     }
     
     @Test
-    public void testUVLFormulaFormatParseWithMinimalSaladFeatureModel() throws IOException {
+    public void testUVLFormulaFormatParseWithAttributes() throws IOException {
     	IFormat<IFormula> format = new UVLFormulaFormat();
         Result<IFormula> computedFormula = format.parse(new FileInputMapper(
-                Path.of("src", "test", "resources", "uvl", "MinimalSaladFeatureModel.uvl"), Charset.defaultCharset()));
+                Path.of("src", "test", "resources", "uvl", "featureModelSerializeResultWithAttributes.uvl"), Charset.defaultCharset()));
 
         if (computedFormula.isEmpty()) {
             Assertions.fail();
