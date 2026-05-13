@@ -34,7 +34,6 @@ import de.featjar.formula.structure.connective.Not;
 import de.featjar.formula.structure.connective.Or;
 import de.featjar.formula.structure.predicate.Literal;
 import de.featjar.formula.structure.predicate.True;
-import de.featjar.formula.structure.term.value.Variable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
